@@ -65,7 +65,8 @@ scylla-monitor-ctl
 ├── backup          # Backup/restore (convenience wrapper around migrate)
 │   ├── create      # Create a backup (calls migrate export with local defaults)
 │   └── restore     # Restore from a backup (calls migrate import)
-├── status          # Show status of all stack components
+├── status          # Show status of all stack components (container-level)
+├── check           # API-level health checks (Grafana, Prometheus, AlertManager, datasources, alerts)
 └── version         # Show version info and supported ScyllaDB versions
 ```
 
@@ -117,7 +118,8 @@ scylla-monitor-ctl
 | `backup create` | Convenience wrapper: calls `migrate export` with local defaults |
 | `backup restore` | Convenience wrapper: calls `migrate import` |
 | `tune` | Modify metric filtering, scrape intervals, alert rules on the fly |
-| `status` | Health check all components, show versions, disk usage |
+| `status` | Container status for all components, show versions, disk usage |
+| `check` | API-level health checks: Grafana, Prometheus, AlertManager, datasources, alerts |
 | `targets validate` | Test connectivity to ScyllaDB nodes |
 | `prometheus reload` | Hot-reload config without container restart |
 
@@ -362,7 +364,9 @@ Operations needed:
 
 | Operation | API endpoint | Used by |
 |---|---|---|
-| Create/update datasource | `POST /api/datasources`, `PUT /api/datasources/:id` | `configure`, `deploy` |
+| Upsert datasource | `POST /api/datasources` + `PUT /api/datasources/:id` on 409 | `configure`, `deploy`, `migrate import` |
+| Get datasource by name | `GET /api/datasources/name/:name` | `migrate import` (upsert lookup) |
+| Datasource health check | `GET /api/datasources/:id/health` | `check` |
 | List datasources | `GET /api/datasources` | `configure`, `status` |
 | Upload dashboard | `POST /api/dashboards/db` (with `overwrite: true`) | `dashboards upload`, `upgrade` |
 | Download dashboard | `GET /api/dashboards/uid/:uid` | `dashboards download`, `migrate export` |
@@ -770,9 +774,46 @@ scylla-monitor-ctl migrate copy \
   --include-datasources
 ```
 
+### `check`
+
+Performs API-level health checks on the monitoring stack. **NEW.**
+
+```
+scylla-monitor-ctl check \
+  --grafana-url http://localhost:3000 \
+  --grafana-user admin \
+  --grafana-password admin \
+  --prometheus-url http://localhost:9090 \
+  --alertmanager-url http://localhost:9093
+```
+
+Checks performed:
+- **Grafana API Health** — `GET /api/health`
+- **Grafana Dashboards** — count of loaded dashboards
+- **Prometheus API Health** — `GET /-/ready`
+- **Prometheus Scrape Targets** — queries `up` metric, reports up/down counts
+- **AlertManager API Health** — `GET /-/healthy`
+- **Datasource Connectivity** — for each Grafana datasource, tests health via `GET /api/datasources/:id/health` or proxy query
+- **Firing Alerts** — queries Prometheus alerts API, reports firing/pending counts and alert names
+
+Output:
+```
+COMPONENT      CHECK                STATUS DETAIL
+--------------------------------------------------------------------------------
+Grafana        API Health           [OK]   http://localhost:3000
+Grafana        Dashboards           [OK]   10 dashboards loaded
+Prometheus     API Health           [OK]   http://localhost:9090
+Prometheus     Scrape targets       [OK]   3 up, 0 down
+AlertManager   API Health           [OK]   http://localhost:9093
+Datasource     prometheus           [OK]   prometheus -> http://localhost:9090
+Prometheus     Alerts               [OK]   no alerts firing
+```
+
+Exit code 1 if any check fails, 0 if all pass.
+
 ### `status`
 
-Shows health and status of all components. **NEW.**
+Shows container-level status of all components. **NEW.**
 
 ```
 scylla-monitor-ctl status [--stack <id>]
@@ -931,7 +972,8 @@ scylla-monitor-ctl/
 │   ├── prometheus.go                # prometheus subcommands
 │   ├── migrate.go                   # migrate subcommands
 │   ├── backup.go                    # backup subcommands (convenience wrappers around migrate)
-│   ├── status.go                    # status command
+│   ├── status.go                    # status command (container-level)
+│   ├── check.go                     # health check command (API-level)
 │   └── version.go                   # version command
 ├── pkg/
 │   ├── dashboard/

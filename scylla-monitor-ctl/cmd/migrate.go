@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 
 	"github.com/spf13/cobra"
 
+	"github.com/scylladb/scylla-monitoring/scylla-monitor-ctl/pkg/docker"
 	"github.com/scylladb/scylla-monitoring/scylla-monitor-ctl/pkg/migrate"
 )
 
@@ -22,18 +24,26 @@ var migrateExportFlags struct {
 
 var migrateImportFlags struct {
 	GrafanaConnFlags
-	Archive        string
 	DataDir        string
 	GrafanaDataDir string
 	GrafanaPort    int
 	PrometheusURL  string
 }
 
+var migrateCloneFlags struct {
+	GrafanaConnFlags
+	PrometheusURL    string
+	PrometheusPort   int
+	GrafanaPort      int
+	AlertManagerPort int
+	StackID          int
+}
+
 var migrateCopyFlags struct {
-	Source              GrafanaConnFlags
-	Target              GrafanaConnFlags
-	IncludeDashboards   bool
-	IncludeDatasources  bool
+	Source             GrafanaConnFlags
+	Target             GrafanaConnFlags
+	IncludeDashboards  bool
+	IncludeDatasources bool
 }
 
 var migrateCmd = &cobra.Command{
@@ -49,30 +59,50 @@ var migrateExportCmd = &cobra.Command{
 
 Prometheus metric data is included automatically when --prometheus-url is provided.
 Without it, only configuration files and Grafana dashboards/datasources are exported.`,
-	RunE:  runMigrateExport,
+	SilenceUsage: true,
+	RunE:         runMigrateExport,
 }
 
 var migrateImportCmd = &cobra.Command{
-	Use:   "import",
-	Short: "Import a monitoring stack from an archive",
-	Long: `Restore dashboards, configs, and optionally data from an export archive.
+	Use:   "import PATH",
+	Short: "Import a monitoring stack from an archive or directory",
+	Long: `Restore dashboards, configs, and optionally data from an export archive
+or an unpacked export directory.
+
+PATH can be a .tar.gz archive or a directory containing the unpacked export.
 
 When --prometheus-url is provided, imported Prometheus datasource URLs are
 rewritten to point to the given address instead of the original source.`,
-	RunE:  runMigrateImport,
+	Args:         cobra.ExactArgs(1),
+	SilenceUsage: true,
+	RunE:         runMigrateImport,
+}
+
+var migrateCloneCmd = &cobra.Command{
+	Use:   "clone",
+	Short: "Clone a running stack to new ports",
+	Long: `Clone a monitoring stack by exporting from a running source and deploying
+a new stack on different ports. The new stack scrapes the same targets as the source.
+
+Target files are auto-discovered from the source Prometheus API. Datasource URLs
+are automatically rewritten to use the new container-internal addresses.`,
+	SilenceUsage: true,
+	RunE:         runMigrateClone,
 }
 
 var migrateCopyCmd = &cobra.Command{
 	Use:   "copy",
 	Short: "Live copy from one stack to another",
 	Long:  `Copy dashboards and datasources from a source Grafana to a target.`,
-	RunE:  runMigrateCopy,
+	SilenceUsage: true,
+	RunE:         runMigrateCopy,
 }
 
 func init() {
 	rootCmd.AddCommand(migrateCmd)
 	migrateCmd.AddCommand(migrateExportCmd)
 	migrateCmd.AddCommand(migrateImportCmd)
+	migrateCmd.AddCommand(migrateCloneCmd)
 	migrateCmd.AddCommand(migrateCopyCmd)
 
 	// Export flags
@@ -80,21 +110,28 @@ func init() {
 	ef := migrateExportCmd.Flags()
 	ef.StringVar(&migrateExportFlags.PrometheusURL, "prometheus-url", "", "Prometheus URL (enables metric data export)")
 	ef.StringVar(&migrateExportFlags.Output, "output", "stack-export.tar.gz", "Output archive path")
-	ef.StringVar(&migrateExportFlags.PrometheusConfig, "prometheus-config", "", "Path to prometheus.yml")
-	ef.StringVar(&migrateExportFlags.AlertRulesDir, "alert-rules-dir", "", "Path to alert rules directory")
-	ef.StringVar(&migrateExportFlags.AlertManagerConfig, "alertmanager-config", "", "Path to AlertManager config")
+	ef.StringVar(&migrateExportFlags.PrometheusConfig, "prometheus-config", "prometheus/build/prometheus.yml", "Path to prometheus.yml")
+	ef.StringVar(&migrateExportFlags.AlertRulesDir, "alert-rules-dir", "prometheus/prom_rules", "Path to alert rules directory")
+	ef.StringVar(&migrateExportFlags.AlertManagerConfig, "alertmanager-config", "prometheus/rule_config.yml", "Path to AlertManager config")
 	ef.StringVar(&migrateExportFlags.LokiConfig, "loki-config", "", "Path to Loki config")
 	ef.StringSliceVar(&migrateExportFlags.TargetFiles, "target-files", nil, "Target files to include")
 
 	// Import flags
 	migrateImportFlags.GrafanaConnFlags.Register(migrateImportCmd, "")
 	imf := migrateImportCmd.Flags()
-	imf.StringVar(&migrateImportFlags.Archive, "archive", "", "Path to export archive (required)")
 	imf.StringVar(&migrateImportFlags.PrometheusURL, "prometheus-url", "", "Rewrite Prometheus datasource URLs to this address")
 	imf.StringVar(&migrateImportFlags.DataDir, "data-dir", "", "Prometheus data directory")
 	imf.StringVar(&migrateImportFlags.GrafanaDataDir, "grafana-data-dir", "", "Grafana data directory")
 	imf.IntVar(&migrateImportFlags.GrafanaPort, "grafana-port", 3000, "Grafana port")
-	migrateImportCmd.MarkFlagRequired("archive")
+
+	// Clone flags
+	migrateCloneFlags.GrafanaConnFlags.Register(migrateCloneCmd, "http://localhost:3000")
+	clf := migrateCloneCmd.Flags()
+	clf.StringVar(&migrateCloneFlags.PrometheusURL, "prometheus-url", "http://localhost:9090", "Source Prometheus URL")
+	clf.IntVar(&migrateCloneFlags.PrometheusPort, "prometheus-port", 9091, "Target Prometheus port")
+	clf.IntVar(&migrateCloneFlags.GrafanaPort, "grafana-port", 3001, "Target Grafana port")
+	clf.IntVar(&migrateCloneFlags.AlertManagerPort, "alertmanager-port", 9095, "Target AlertManager port")
+	clf.IntVar(&migrateCloneFlags.StackID, "stack", 1, "Target stack ID")
 
 	// Copy flags
 	migrateCopyFlags.Source.RegisterWithPrefix(migrateCopyCmd, "source-", "Source")
@@ -133,7 +170,7 @@ func runMigrateExport(cmd *cobra.Command, args []string) error {
 
 func runMigrateImport(cmd *cobra.Command, args []string) error {
 	opts := migrate.RestoreOptions{
-		ArchivePath:     migrateImportFlags.Archive,
+		ArchivePath:     args[0],
 		PrometheusURL:   migrateImportFlags.PrometheusURL,
 		DataDir:         migrateImportFlags.DataDir,
 		GrafanaDataDir:  migrateImportFlags.GrafanaDataDir,
@@ -148,6 +185,28 @@ func runMigrateImport(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println("Stack imported successfully.")
 	return nil
+}
+
+func runMigrateClone(cmd *cobra.Command, args []string) error {
+	runtime, _ := docker.DetectRuntime(cmd.Context())
+
+	opts := migrate.CloneOptions{
+		SourceGrafanaURL:      migrateCloneFlags.URL,
+		SourceGrafanaUser:     migrateCloneFlags.User,
+		SourceGrafanaPassword: migrateCloneFlags.Password,
+		SourcePrometheusURL:   migrateCloneFlags.PrometheusURL,
+		PrometheusPort:        migrateCloneFlags.PrometheusPort,
+		GrafanaPort:           migrateCloneFlags.GrafanaPort,
+		AlertManagerPort:      migrateCloneFlags.AlertManagerPort,
+		StackID:               migrateCloneFlags.StackID,
+		PrometheusImage:       "prom/prometheus:v3.9.1",
+		GrafanaImage:          "grafana/grafana:12.3.2",
+		AlertManagerImage:     "prom/alertmanager:v0.30.1",
+		Runtime:               runtime,
+	}
+
+	ctx := context.Background()
+	return migrate.CloneStack(ctx, opts)
 }
 
 func runMigrateCopy(cmd *cobra.Command, args []string) error {

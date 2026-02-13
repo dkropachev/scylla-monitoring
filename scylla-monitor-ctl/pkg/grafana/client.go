@@ -121,7 +121,7 @@ func (c *Client) ListDatasources() ([]APIDatasource, error) {
 	return result, nil
 }
 
-// CreateDatasource creates a new datasource.
+// CreateDatasource creates a new datasource. Returns nil on 409 conflict.
 func (c *Client) CreateDatasource(ds APIDatasource) error {
 	data, code, err := c.doRequest("POST", "/api/datasources", ds)
 	if err != nil {
@@ -129,6 +129,55 @@ func (c *Client) CreateDatasource(ds APIDatasource) error {
 	}
 	if code != 200 && code != 409 {
 		return fmt.Errorf("create datasource returned status %d: %s", code, data)
+	}
+	return nil
+}
+
+// UpsertDatasource creates a datasource, or updates it if one with the same name exists.
+func (c *Client) UpsertDatasource(ds APIDatasource) error {
+	data, code, err := c.doRequest("POST", "/api/datasources", ds)
+	if err != nil {
+		return err
+	}
+	if code == 200 {
+		return nil
+	}
+	if code != 409 {
+		return fmt.Errorf("create datasource returned status %d: %s", code, data)
+	}
+	// 409 conflict — datasource already exists, find and update it
+	existing, err := c.GetDatasourceByName(ds.Name)
+	if err != nil {
+		return fmt.Errorf("looking up existing datasource %q: %w", ds.Name, err)
+	}
+	ds.ID = existing.ID
+	return c.UpdateDatasource(existing.ID, ds)
+}
+
+// GetDatasourceByName returns a datasource by its name.
+func (c *Client) GetDatasourceByName(name string) (*APIDatasource, error) {
+	data, code, err := c.doRequest("GET", "/api/datasources/name/"+name, nil)
+	if err != nil {
+		return nil, err
+	}
+	if code != 200 {
+		return nil, fmt.Errorf("get datasource by name returned status %d: %s", code, data)
+	}
+	var ds APIDatasource
+	if err := json.Unmarshal(data, &ds); err != nil {
+		return nil, fmt.Errorf("parsing datasource: %w", err)
+	}
+	return &ds, nil
+}
+
+// CheckDatasourceHealth checks whether a datasource is reachable via Grafana's health check proxy.
+func (c *Client) CheckDatasourceHealth(id int) error {
+	data, code, err := c.doRequest("GET", fmt.Sprintf("/api/datasources/%d/health", id), nil)
+	if err != nil {
+		return err
+	}
+	if code != 200 {
+		return fmt.Errorf("datasource health check returned status %d: %s", code, data)
 	}
 	return nil
 }

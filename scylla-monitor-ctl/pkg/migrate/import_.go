@@ -24,18 +24,36 @@ type RestoreOptions struct {
 	PrometheusURL   string // if set, rewrite Prometheus datasource URLs to this value
 }
 
-// RestoreStack restores a monitoring stack from an export archive.
+// RestoreStack restores a monitoring stack from an export archive or directory.
 func RestoreStack(opts RestoreOptions) error {
-	// Extract archive
-	extractDir, err := os.MkdirTemp("", "scylla-monitor-import-*")
-	if err != nil {
-		return fmt.Errorf("creating extract directory: %w", err)
-	}
-	defer os.RemoveAll(extractDir)
+	var extractDir string
+	var cleanup func()
 
-	if err := UnpackArchive(opts.ArchivePath, extractDir); err != nil {
-		return fmt.Errorf("unpacking archive: %w", err)
+	info, err := os.Stat(opts.ArchivePath)
+	if err != nil {
+		return fmt.Errorf("accessing %s: %w", opts.ArchivePath, err)
 	}
+
+	if info.IsDir() {
+		// Already unpacked — use directly
+		extractDir = opts.ArchivePath
+		cleanup = func() {}
+		slog.Info("using unpacked export directory", "path", extractDir)
+	} else {
+		// Archive — extract to temp dir
+		tmpDir, err := os.MkdirTemp("", "scylla-monitor-import-*")
+		if err != nil {
+			return fmt.Errorf("creating extract directory: %w", err)
+		}
+		cleanup = func() { os.RemoveAll(tmpDir) }
+
+		if err := UnpackArchive(opts.ArchivePath, tmpDir); err != nil {
+			cleanup()
+			return fmt.Errorf("unpacking archive: %w", err)
+		}
+		extractDir = tmpDir
+	}
+	defer cleanup()
 
 	// Read metadata
 	metaPath := filepath.Join(extractDir, "metadata.yaml")
@@ -104,8 +122,8 @@ func RestoreStack(opts RestoreOptions) error {
 					slog.Info("rewriting datasource URL", "datasource", ds.Name, "old", ds.URL, "new", opts.PrometheusURL)
 					ds.URL = opts.PrometheusURL
 				}
-				if err := gc.CreateDatasource(ds); err != nil {
-					slog.Warn("creating datasource", "datasource", ds.Name, "error", err)
+				if err := gc.UpsertDatasource(ds); err != nil {
+					slog.Warn("upserting datasource", "datasource", ds.Name, "error", err)
 				}
 			}
 		}
