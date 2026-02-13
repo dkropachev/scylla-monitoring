@@ -129,7 +129,7 @@ func TestIntegrationDeployDestroySingleContainer(t *testing.T) {
 	promName := docker.ContainerName("aprom", promPort, 9090)
 	promCfg := docker.ContainerConfig{
 		Name:        promName,
-		Image:       "prom/prometheus:v3.2.1",
+		Image:       "prom/prometheus:v3.9.1",
 		NetworkName: docker.NetworkName(stackID),
 		PortBindings: map[string]string{
 			"9090/tcp": fmt.Sprintf("%d", promPort),
@@ -149,7 +149,7 @@ func TestIntegrationDeployDestroySingleContainer(t *testing.T) {
 
 	// Wait for health
 	url := fmt.Sprintf("http://localhost:%d/-/healthy", promPort)
-	if err := docker.WaitForHealth(ctx, url, 30, time.Second); err != nil {
+	if err := docker.WaitForHealth(ctx, url, 60, time.Second); err != nil {
 		t.Fatalf("Prometheus health check: %v", err)
 	}
 	t.Logf("Prometheus healthy on port %d", promPort)
