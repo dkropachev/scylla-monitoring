@@ -10,14 +10,14 @@ import (
 
 // CopyOptions holds options for live stack-to-stack copy.
 type CopyOptions struct {
-	SourceGrafanaURL       string
-	SourceGrafanaUser      string
-	SourceGrafanaPassword  string
-	TargetGrafanaURL       string
-	TargetGrafanaUser      string
-	TargetGrafanaPassword  string
-	IncludeDashboards      bool
-	IncludeDatasources     bool
+	SourceGrafanaURL      string
+	SourceGrafanaUser     string
+	SourceGrafanaPassword string
+	TargetGrafanaURL      string
+	TargetGrafanaUser     string
+	TargetGrafanaPassword string
+	IncludeDashboards     bool
+	IncludeDatasources    bool
 }
 
 // Copy performs a live copy from one Grafana to another.

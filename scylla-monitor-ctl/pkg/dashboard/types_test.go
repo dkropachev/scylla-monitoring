@@ -122,7 +122,7 @@ func TestUpdateObject_AutoID(t *testing.T) {
 	}
 	id := 1
 	result := UpdateObject(obj, map[string]interface{}{}, nil, nil, map[string]interface{}{}, &id)
-	resultMap := result.(map[string]interface{})
+	resultMap, _ := result.(map[string]interface{})
 	if resultMap["id"] != 1 {
 		t.Errorf("expected id=1, got %v", resultMap["id"])
 	}
@@ -146,7 +146,7 @@ func TestUpdateObject_ClassResolution(t *testing.T) {
 	}
 	id := 1
 	result := UpdateObject(obj, types, nil, nil, map[string]interface{}{}, &id)
-	resultMap := result.(map[string]interface{})
+	resultMap, _ := result.(map[string]interface{})
 	if resultMap["type"] != "text" {
 		t.Errorf("expected type=text from class, got %v", resultMap["type"])
 	}
@@ -193,8 +193,8 @@ func TestUpdateObject_ArrayFiltering(t *testing.T) {
 	}
 	id := 1
 	result := UpdateObject(obj, map[string]interface{}{}, []int{5, 4}, nil, map[string]interface{}{}, &id)
-	resultMap := result.(map[string]interface{})
-	panels := resultMap["panels"].([]interface{})
+	resultMap, _ := result.(map[string]interface{})
+	panels, _ := resultMap["panels"].([]interface{})
 	if len(panels) != 2 {
 		t.Errorf("expected 2 panels after filtering, got %d", len(panels))
 	}
@@ -209,7 +209,7 @@ func TestUpdateObject_ExactMatchReplace(t *testing.T) {
 	}
 	id := 1
 	result := UpdateObject(obj, map[string]interface{}{}, nil, nil, exactMatch, &id)
-	resultMap := result.(map[string]interface{})
+	resultMap, _ := result.(map[string]interface{})
 	if resultMap["expr"] != "new_metric_name" {
 		t.Errorf("expected expr=new_metric_name, got %v", resultMap["expr"])
 	}
@@ -241,8 +241,8 @@ func TestUpdateObject_ProductReject(t *testing.T) {
 
 func TestUpdateObject_ProductRejectField(t *testing.T) {
 	obj := map[string]interface{}{
-		"type":               "panel",
-		"dashproductreject":  "enterprise",
+		"type":              "panel",
+		"dashproductreject": "enterprise",
 	}
 	id := 1
 	result := UpdateObject(obj, map[string]interface{}{}, nil, []string{"enterprise"}, map[string]interface{}{}, &id)

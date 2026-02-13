@@ -23,7 +23,7 @@ var statusCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(statusCmd)
-	statusFlags.StackPortFlags.Register(statusCmd)
+	statusFlags.Register(statusCmd)
 }
 
 func runStatus(cmd *cobra.Command, args []string) error {

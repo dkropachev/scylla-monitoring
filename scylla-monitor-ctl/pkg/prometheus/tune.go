@@ -21,7 +21,7 @@ type TuneOptions struct {
 
 // TuneConfig reads, modifies, and writes a prometheus.yml file.
 func TuneConfig(opts TuneOptions) error {
-	data, err := os.ReadFile(opts.ConfigPath)
+	data, err := os.ReadFile(opts.ConfigPath) //nolint:gosec // user-provided config path
 	if err != nil {
 		return fmt.Errorf("reading config: %w", err)
 	}
@@ -69,7 +69,7 @@ func TuneConfig(opts TuneOptions) error {
 		config = tuneNativeHistogram(config, *opts.NativeHistogram)
 	}
 
-	if err := os.WriteFile(opts.ConfigPath, []byte(config), 0644); err != nil {
+	if err := os.WriteFile(opts.ConfigPath, []byte(config), 0600); err != nil { //nolint:gosec // config file
 		return fmt.Errorf("writing config: %w", err)
 	}
 

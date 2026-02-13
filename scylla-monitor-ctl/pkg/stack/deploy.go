@@ -13,26 +13,26 @@ import (
 
 // DeployOptions holds all options for deploying the monitoring stack.
 type DeployOptions struct {
-	ScyllaVersion       string
-	ManagerVersion      string
-	Enterprise          bool
+	ScyllaVersion  string
+	ManagerVersion string
+	Enterprise     bool
 
 	// Container images
-	PrometheusImage     string
-	GrafanaImage        string
-	AlertManagerImage   string
-	LokiImage           string
-	PromtailImage       string
+	PrometheusImage      string
+	GrafanaImage         string
+	AlertManagerImage    string
+	LokiImage            string
+	PromtailImage        string
 	RendererImage        string
 	VictoriaMetricsImage string
 
 	// Ports
-	PrometheusPort      int
-	GrafanaPort         int
-	AlertManagerPort    int
-	LokiPort            int
-	PromtailPort        int
-	PromtailBinaryPort  int
+	PrometheusPort     int
+	GrafanaPort        int
+	AlertManagerPort   int
+	LokiPort           int
+	PromtailPort       int
+	PromtailBinaryPort int
 
 	// Storage
 	DataDir             string // Prometheus data
@@ -41,60 +41,60 @@ type DeployOptions struct {
 	AlertManagerDataDir string
 
 	// Target files
-	TargetsFile         string
-	NodeExporterFile    string
-	ManagerTargetsFile  string
-	VectorSearchFile    string
-	TargetsDir          string
+	TargetsFile        string
+	NodeExporterFile   string
+	ManagerTargetsFile string
+	VectorSearchFile   string
+	TargetsDir         string
 
 	// Prometheus
-	ScrapeInterval      string
-	EvaluationInterval  string
-	NativeHistogram     bool
-	DropMetrics         []string
-	PrometheusOpts      []string
-	AlertRules          string
-	AdditionalTargets   []string
+	ScrapeInterval     string
+	EvaluationInterval string
+	NativeHistogram    bool
+	DropMetrics        []string
+	PrometheusOpts     []string
+	AlertRules         string
+	AdditionalTargets  []string
 
 	// Grafana
-	AdminPassword       string
-	AnonymousRole       string
-	BasicAuth           bool
-	Anonymous           bool
-	DisableAnonymous    bool
-	LDAPConfigFile      string
-	GrafanaEnv          []string
-	ExtraDashboards     []string
-	Solution            string
-	SupportDashboard    bool
-	ClearDashboards     bool
+	AdminPassword    string
+	AnonymousRole    string
+	BasicAuth        bool
+	Anonymous        bool
+	DisableAnonymous bool
+	LDAPConfigFile   string
+	GrafanaEnv       []string
+	ExtraDashboards  []string
+	Solution         string
+	SupportDashboard bool
+	ClearDashboards  bool
 
 	// Components
-	NoLoki              bool
-	NoAlertManager      bool
-	NoRenderer          bool
-	VictoriaMetrics     bool
+	NoLoki          bool
+	NoAlertManager  bool
+	NoRenderer      bool
+	VictoriaMetrics bool
 
 	// Docker
-	AutoRestart         bool
-	HostNetwork         bool
-	BindAddress         string
-	DockerParam         string
-	ComposeMode         bool
-	QuickStartup        bool
+	AutoRestart  bool
+	HostNetwork  bool
+	BindAddress  string
+	DockerParam  string
+	ComposeMode  bool
+	QuickStartup bool
 
 	// Multi-stack
-	StackID             int
+	StackID int
 
 	// AlertManager
-	AlertManagerConfig  string
-	AlertManagerOpts    []string
+	AlertManagerConfig string
+	AlertManagerOpts   []string
 
 	// Consul
-	ConsulAddress       string
+	ConsulAddress string
 
 	// Runtime
-	Runtime             docker.Runtime
+	Runtime docker.Runtime
 }
 
 // Deploy deploys the complete monitoring stack.
@@ -182,7 +182,7 @@ func Deploy(ctx context.Context, opts DeployOptions) error {
 		if !opts.QuickStartup {
 			url := fmt.Sprintf("http://localhost:%d/", opts.LokiPort)
 			if err := docker.WaitForHealth(ctx, url, 25, time.Second); err != nil {
-				return fmt.Errorf("Loki health check: %w", err)
+				return fmt.Errorf("loki health check: %w", err)
 			}
 		}
 		// Promtail
@@ -275,7 +275,7 @@ func Deploy(ctx context.Context, opts DeployOptions) error {
 	if !opts.QuickStartup {
 		url := fmt.Sprintf("http://localhost:%d/", opts.PrometheusPort)
 		if err := docker.WaitForHealth(ctx, url, 35, time.Second); err != nil {
-			return fmt.Errorf("Prometheus health check: %w", err)
+			return fmt.Errorf("prometheus health check: %w", err)
 		}
 	}
 
@@ -283,8 +283,8 @@ func Deploy(ctx context.Context, opts DeployOptions) error {
 	if opts.DataDir != "" {
 		meta := fmt.Sprintf("version: %s\nmanager: %s\ndate: %s\n",
 			opts.ScyllaVersion, opts.ManagerVersion, time.Now().Format(time.RFC3339))
-		_ = os.MkdirAll(opts.DataDir, 0755)
-		_ = os.WriteFile(filepath.Join(opts.DataDir, "scylla.txt"), []byte(meta), 0644)
+		_ = os.MkdirAll(opts.DataDir, 0750) //nolint:gosec // data dir
+		_ = os.WriteFile(filepath.Join(opts.DataDir, "scylla.txt"), []byte(meta), 0600)
 	}
 
 	// 6. Start Grafana
@@ -348,7 +348,7 @@ func Deploy(ctx context.Context, opts DeployOptions) error {
 	if !opts.QuickStartup {
 		url := fmt.Sprintf("http://localhost:%d/api/org", opts.GrafanaPort)
 		if err := docker.WaitForHealth(ctx, url, 35, time.Second); err != nil {
-			return fmt.Errorf("Grafana health check: %w", err)
+			return fmt.Errorf("grafana health check: %w", err)
 		}
 	}
 

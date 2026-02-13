@@ -87,7 +87,7 @@ func TestGenerator_Generate(t *testing.T) {
 		t.Fatalf("expected 1 panel, got %d", len(panels))
 	}
 
-	p := panels[0].(map[string]interface{})
+	p, _ := panels[0].(map[string]interface{})
 	if p["type"] != "text" {
 		t.Errorf("expected type 'text' from class resolution, got %v", p["type"])
 	}
@@ -279,7 +279,7 @@ func TestGenerator_GenerateToFile(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	data, err := os.ReadFile(outputPath)
+	data, err := os.ReadFile(outputPath) //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading output: %v", err)
 	}

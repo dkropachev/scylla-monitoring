@@ -53,7 +53,7 @@ func generateWithPythonGenconfig(t *testing.T, dcs []string, cluster string) ([]
 		return nil, fmt.Errorf("genconfig.py failed: %v\noutput: %s", err, output)
 	}
 
-	data, err := os.ReadFile(filepath.Join(outDir, "targets.yml"))
+	data, err := os.ReadFile(filepath.Join(outDir, "targets.yml")) //nolint:gosec // test code
 	if err != nil {
 		return nil, fmt.Errorf("reading python output: %v", err)
 	}
@@ -170,7 +170,7 @@ func TestPythonGoTargetCompatibility_WithAlias(t *testing.T) {
 		t.Fatalf("Python genconfig.py failed: %v\noutput: %s", err, output)
 	}
 
-	pyData, err := os.ReadFile(filepath.Join(outDir, "targets.yml"))
+	pyData, err := os.ReadFile(filepath.Join(outDir, "targets.yml")) //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading python output: %v", err)
 	}
@@ -252,7 +252,7 @@ UN  10.0.1.1      128.0 KB   256     33.3%   ggg-hhh-iii                        
 		t.Fatalf("Python genconfig.py failed: %v\noutput: %s", err, output)
 	}
 
-	pyData, err := os.ReadFile(filepath.Join(outDir, "targets.yml"))
+	pyData, err := os.ReadFile(filepath.Join(outDir, "targets.yml")) //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading python output: %v", err)
 	}
@@ -316,7 +316,7 @@ func TestPythonGoTargetCompatibility_YAMLOutput(t *testing.T) {
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Python failed: %v\n%s", err, out)
 	}
-	pyData, _ := os.ReadFile(filepath.Join(pyDir, "targets.yml"))
+	pyData, _ := os.ReadFile(filepath.Join(pyDir, "targets.yml")) //nolint:gosec // test code
 
 	// Go output
 	goDir := t.TempDir()
@@ -327,12 +327,12 @@ func TestPythonGoTargetCompatibility_YAMLOutput(t *testing.T) {
 	if err := WriteTargetsFile(goGroups, goDir, "targets.yml"); err != nil {
 		t.Fatalf("Go WriteTargetsFile failed: %v", err)
 	}
-	goData, _ := os.ReadFile(filepath.Join(goDir, "targets.yml"))
+	goData, _ := os.ReadFile(filepath.Join(goDir, "targets.yml")) //nolint:gosec // test code
 
 	// Parse both and compare structurally
 	var pyParsed, goParsed []TargetGroup
-	yaml.Unmarshal(pyData, &pyParsed)
-	yaml.Unmarshal(goData, &goParsed)
+	_ = yaml.Unmarshal(pyData, &pyParsed)
+	_ = yaml.Unmarshal(goData, &goParsed)
 
 	if len(pyParsed) != len(goParsed) {
 		t.Fatalf("Parsed group count: python=%d, go=%d\npython YAML:\n%s\ngo YAML:\n%s",

@@ -103,7 +103,7 @@ services:
 	}
 
 	// Check compose file exists
-	composeData, err := os.ReadFile(filepath.Join(dir, "docker-compose.yml"))
+	composeData, err := os.ReadFile(filepath.Join(dir, "docker-compose.yml")) //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading docker-compose.yml: %v", err)
 	}
@@ -112,7 +112,7 @@ services:
 	}
 
 	// Check .env file
-	envData, err := os.ReadFile(filepath.Join(dir, ".env"))
+	envData, err := os.ReadFile(filepath.Join(dir, ".env")) //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading .env: %v", err)
 	}

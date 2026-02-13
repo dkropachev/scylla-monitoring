@@ -129,7 +129,7 @@ func ParseNodetoolStatus(r io.Reader) ([]string, error) {
 
 // WriteTargetsFile writes target groups to a YAML file.
 func WriteTargetsFile(groups []TargetGroup, directory, filename string) error {
-	if err := os.MkdirAll(directory, 0755); err != nil {
+	if err := os.MkdirAll(directory, 0750); err != nil { //nolint:gosec // targets output dir
 		return fmt.Errorf("creating directory: %w", err)
 	}
 
@@ -139,7 +139,7 @@ func WriteTargetsFile(groups []TargetGroup, directory, filename string) error {
 	}
 
 	path := filepath.Join(directory, filename)
-	if err := os.WriteFile(path, data, 0644); err != nil {
+	if err := os.WriteFile(path, data, 0600); err != nil { //nolint:gosec // targets file
 		return fmt.Errorf("writing targets file: %w", err)
 	}
 
@@ -148,7 +148,7 @@ func WriteTargetsFile(groups []TargetGroup, directory, filename string) error {
 
 // WriteTargetsSimple writes a simple target list (no DC labels) to a YAML file.
 func WriteTargetsSimple(targets []string, directory, filename string) error {
-	if err := os.MkdirAll(directory, 0755); err != nil {
+	if err := os.MkdirAll(directory, 0750); err != nil { //nolint:gosec // targets output dir
 		return fmt.Errorf("creating directory: %w", err)
 	}
 
@@ -159,7 +159,7 @@ func WriteTargetsSimple(targets []string, directory, filename string) error {
 	}
 
 	path := filepath.Join(directory, filename)
-	if err := os.WriteFile(path, data, 0644); err != nil {
+	if err := os.WriteFile(path, data, 0600); err != nil { //nolint:gosec // targets file
 		return fmt.Errorf("writing targets file: %w", err)
 	}
 

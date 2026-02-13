@@ -134,7 +134,7 @@ func TestWriteTargetsFile(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	data, err := os.ReadFile(filepath.Join(dir, "test_servers.yml"))
+	data, err := os.ReadFile(filepath.Join(dir, "test_servers.yml")) //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading file: %v", err)
 	}
@@ -159,7 +159,7 @@ func TestWriteTargetsSimple(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	data, err := os.ReadFile(filepath.Join(dir, "simple.yml"))
+	data, err := os.ReadFile(filepath.Join(dir, "simple.yml")) //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading file: %v", err)
 	}

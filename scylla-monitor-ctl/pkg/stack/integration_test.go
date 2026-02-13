@@ -116,7 +116,7 @@ func TestIntegrationDeployDestroySingleContainer(t *testing.T) {
 	// Create a minimal prometheus config
 	promDir := t.TempDir()
 	promConfig := "global:\n  scrape_interval: 15s\nscrape_configs: []\n"
-	if err := os.WriteFile(filepath.Join(promDir, "prometheus.yml"), []byte(promConfig), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(promDir, "prometheus.yml"), []byte(promConfig), 0600); err != nil { //nolint:gosec // test code
 		t.Fatalf("writing prometheus.yml: %v", err)
 	}
 

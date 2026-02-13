@@ -60,17 +60,17 @@ func runPrometheusConfig(cmd *cobra.Command, args []string) error {
 	var templateData []byte
 	var err error
 	if promConfigFlags.Template != "" {
-		templateData, err = os.ReadFile(promConfigFlags.Template)
+		templateData, err = os.ReadFile(promConfigFlags.Template) //nolint:gosec // user-provided path
 		if err != nil {
 			return fmt.Errorf("reading template: %w", err)
 		}
 	} else if promConfigFlags.ConsulAddress != "" {
-		templateData, err = os.ReadFile("prometheus/prometheus.consul.yml.template")
+		templateData, err = os.ReadFile("prometheus/prometheus.consul.yml.template") //nolint:gosec // known path
 		if err != nil {
 			return fmt.Errorf("reading consul template: %w", err)
 		}
 	} else {
-		templateData, err = os.ReadFile("prometheus/prometheus.yml.template")
+		templateData, err = os.ReadFile("prometheus/prometheus.yml.template") //nolint:gosec // known path
 		if err != nil {
 			return fmt.Errorf("reading template: %w", err)
 		}

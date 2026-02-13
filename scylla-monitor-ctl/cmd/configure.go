@@ -80,7 +80,7 @@ func runConfigure(cmd *cobra.Command, args []string) error {
 
 	// Generate and upload dashboards
 	if configureFlags.ScyllaVersion != "" {
-		typesData, err := os.ReadFile("grafana/types.json")
+		typesData, err := os.ReadFile("grafana/types.json") //nolint:gosec // known path
 		if err != nil {
 			return fmt.Errorf("reading types.json: %w", err)
 		}
@@ -94,7 +94,7 @@ func runConfigure(cmd *cobra.Command, args []string) error {
 		dashboards := []string{"scylla-overview", "scylla-detailed", "scylla-os", "scylla-cql", "scylla-advanced", "alternator", "scylla-ks"}
 		for _, name := range dashboards {
 			templatePath := filepath.Join("grafana", name+".template.json")
-			templateData, err := os.ReadFile(templatePath)
+			templateData, err := os.ReadFile(templatePath) //nolint:gosec // constructed path
 			if err != nil {
 				slog.Warn("reading template", "dashboard", name, "error", err)
 				continue

@@ -9,14 +9,14 @@ import (
 
 // DatasourceOptions holds options for generating Grafana datasource provisioning files.
 type DatasourceOptions struct {
-	PrometheusAddress    string // e.g. "aprom:9090"
-	AlertManagerAddress  string // e.g. "aalert:9093"
-	LokiAddress          string // e.g. "loki:3100" (empty to skip)
-	ScyllaUser           string // optional CQL credentials
-	ScyllaPassword       string
-	ScrapeInterval       string // override timeInterval in datasource (e.g. "30")
-	StackID              int    // 0 = default path, >0 = stack-specific path
-	OutputBaseDir        string // base directory (default: "grafana")
+	PrometheusAddress   string // e.g. "aprom:9090"
+	AlertManagerAddress string // e.g. "aalert:9093"
+	LokiAddress         string // e.g. "loki:3100" (empty to skip)
+	ScyllaUser          string // optional CQL credentials
+	ScyllaPassword      string
+	ScrapeInterval      string // override timeInterval in datasource (e.g. "30")
+	StackID             int    // 0 = default path, >0 = stack-specific path
+	OutputBaseDir       string // base directory (default: "grafana")
 }
 
 // outputDir returns the provisioning datasources directory for the given options.
@@ -34,7 +34,7 @@ func (o *DatasourceOptions) outputDir() string {
 // WriteDatasourceFiles generates all Grafana datasource provisioning files.
 func WriteDatasourceFiles(templates DatasourceTemplates, opts DatasourceOptions) error {
 	outDir := opts.outputDir()
-	if err := os.MkdirAll(outDir, 0755); err != nil {
+	if err := os.MkdirAll(outDir, 0750); err != nil { //nolint:gosec // provisioning dir
 		return fmt.Errorf("creating datasource directory: %w", err)
 	}
 
@@ -45,7 +45,7 @@ func WriteDatasourceFiles(templates DatasourceTemplates, opts DatasourceOptions)
 	if opts.ScrapeInterval != "" {
 		ds = replaceDatasourceTimeInterval(ds, opts.ScrapeInterval)
 	}
-	if err := os.WriteFile(filepath.Join(outDir, "datasource.yaml"), []byte(ds), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(outDir, "datasource.yaml"), []byte(ds), 0600); err != nil { //nolint:gosec // provisioning file
 		return fmt.Errorf("writing datasource.yaml: %w", err)
 	}
 
@@ -54,7 +54,7 @@ func WriteDatasourceFiles(templates DatasourceTemplates, opts DatasourceOptions)
 	if opts.LokiAddress != "" {
 		loki := string(templates.Loki)
 		loki = strings.ReplaceAll(loki, "LOKI_ADDRESS", opts.LokiAddress)
-		if err := os.WriteFile(lokiPath, []byte(loki), 0644); err != nil {
+		if err := os.WriteFile(lokiPath, []byte(loki), 0600); err != nil { //nolint:gosec // provisioning file
 			return fmt.Errorf("writing datasource.loki.yaml: %w", err)
 		}
 	} else {
@@ -71,7 +71,7 @@ func WriteDatasourceFiles(templates DatasourceTemplates, opts DatasourceOptions)
 	} else {
 		scyllaData = templates.Scylla
 	}
-	if err := os.WriteFile(filepath.Join(outDir, "datasource.scylla.yml"), scyllaData, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(outDir, "datasource.scylla.yml"), scyllaData, 0600); err != nil { //nolint:gosec // provisioning file
 		return fmt.Errorf("writing datasource.scylla.yml: %w", err)
 	}
 

@@ -19,7 +19,7 @@ scrape_configs:
       - files:
         - /etc/prometheus/targets/scylla_servers.yml
 `
-	os.WriteFile(configPath, []byte(original), 0644)
+	_ = os.WriteFile(configPath, []byte(original), 0644) //nolint:gosec // test code
 
 	err := TuneConfig(TuneOptions{
 		ConfigPath:  configPath,
@@ -29,7 +29,7 @@ scrape_configs:
 		t.Fatalf("TuneConfig: %v", err)
 	}
 
-	data, _ := os.ReadFile(configPath)
+	data, _ := os.ReadFile(configPath) //nolint:gosec // test code
 	config := string(data)
 	if !strings.Contains(config, ".*_cas.*") {
 		t.Error("expected cas drop rule")
@@ -48,7 +48,7 @@ scrape_configs:
   - job_name: scylla
     # FILTER_METRICS
 `
-	os.WriteFile(configPath, []byte(original), 0644)
+	_ = os.WriteFile(configPath, []byte(original), 0644) //nolint:gosec // test code
 
 	err := TuneConfig(TuneOptions{
 		ConfigPath:  configPath,
@@ -59,7 +59,7 @@ scrape_configs:
 		t.Fatalf("TuneConfig: %v", err)
 	}
 
-	data, _ := os.ReadFile(configPath)
+	data, _ := os.ReadFile(configPath) //nolint:gosec // test code
 	config := string(data)
 	if !strings.Contains(config, ".*_cas.*") {
 		t.Error("expected cas drop rule")
@@ -77,7 +77,7 @@ func TestTuneConfig_ScrapeInterval(t *testing.T) {
   scrape_timeout: 15s
   evaluation_interval: 20s
 `
-	os.WriteFile(configPath, []byte(original), 0644)
+	_ = os.WriteFile(configPath, []byte(original), 0644) //nolint:gosec // test code
 
 	err := TuneConfig(TuneOptions{
 		ConfigPath:     configPath,
@@ -87,7 +87,7 @@ func TestTuneConfig_ScrapeInterval(t *testing.T) {
 		t.Fatalf("TuneConfig: %v", err)
 	}
 
-	data, _ := os.ReadFile(configPath)
+	data, _ := os.ReadFile(configPath) //nolint:gosec // test code
 	config := string(data)
 	if !strings.Contains(config, "scrape_interval: 30s") {
 		t.Error("expected scrape_interval: 30s")
@@ -104,7 +104,7 @@ func TestTuneConfig_EvaluationInterval(t *testing.T) {
   scrape_interval: 20s
   evaluation_interval: 20s
 `
-	os.WriteFile(configPath, []byte(original), 0644)
+	_ = os.WriteFile(configPath, []byte(original), 0644) //nolint:gosec // test code
 
 	err := TuneConfig(TuneOptions{
 		ConfigPath:         configPath,
@@ -114,7 +114,7 @@ func TestTuneConfig_EvaluationInterval(t *testing.T) {
 		t.Fatalf("TuneConfig: %v", err)
 	}
 
-	data, _ := os.ReadFile(configPath)
+	data, _ := os.ReadFile(configPath) //nolint:gosec // test code
 	config := string(data)
 	if !strings.Contains(config, "evaluation_interval: 60s") {
 		t.Error("expected evaluation_interval: 60s")
@@ -127,7 +127,7 @@ func TestTuneConfig_NativeHistogram(t *testing.T) {
 	original := `global:
   scrape_interval: 20s
 `
-	os.WriteFile(configPath, []byte(original), 0644)
+	_ = os.WriteFile(configPath, []byte(original), 0644) //nolint:gosec // test code
 
 	enable := true
 	err := TuneConfig(TuneOptions{
@@ -138,7 +138,7 @@ func TestTuneConfig_NativeHistogram(t *testing.T) {
 		t.Fatalf("TuneConfig: %v", err)
 	}
 
-	data, _ := os.ReadFile(configPath)
+	data, _ := os.ReadFile(configPath) //nolint:gosec // test code
 	config := string(data)
 	if !strings.Contains(config, "scrape_native_histograms: true") {
 		t.Error("expected scrape_native_histograms: true")

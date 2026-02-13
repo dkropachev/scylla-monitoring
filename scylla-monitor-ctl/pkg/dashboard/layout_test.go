@@ -69,7 +69,7 @@ func TestConvertToGrafana5Layout_Simple(t *testing.T) {
 
 	ConvertToGrafana5Layout(results)
 
-	dashboard := results["dashboard"].(map[string]interface{})
+	dashboard, _ := results["dashboard"].(map[string]interface{})
 	if _, ok := dashboard["rows"]; ok {
 		t.Error("expected rows to be removed")
 	}
@@ -81,8 +81,8 @@ func TestConvertToGrafana5Layout_Simple(t *testing.T) {
 		t.Fatalf("expected 2 panels, got %d", len(panels))
 	}
 
-	p0 := panels[0].(map[string]interface{})
-	gp0 := p0["gridPos"].(map[string]interface{})
+	p0, _ := panels[0].(map[string]interface{})
+	gp0, _ := p0["gridPos"].(map[string]interface{})
 	if gp0["x"] != 0 {
 		t.Errorf("expected panel 0 x=0, got %v", gp0["x"])
 	}
@@ -93,8 +93,8 @@ func TestConvertToGrafana5Layout_Simple(t *testing.T) {
 		t.Errorf("expected panel 0 w=12, got %v", gp0["w"])
 	}
 
-	p1 := panels[1].(map[string]interface{})
-	gp1 := p1["gridPos"].(map[string]interface{})
+	p1, _ := panels[1].(map[string]interface{})
+	gp1, _ := p1["gridPos"].(map[string]interface{})
 	if gp1["x"] != 12 {
 		t.Errorf("expected panel 1 x=12, got %v", gp1["x"])
 	}
@@ -123,26 +123,26 @@ func TestConvertToGrafana5Layout_RowWrap(t *testing.T) {
 
 	ConvertToGrafana5Layout(results)
 
-	dashboard := results["dashboard"].(map[string]interface{})
-	panels := dashboard["panels"].([]interface{})
+	dashboard, _ := results["dashboard"].(map[string]interface{})
+	panels, _ := dashboard["panels"].([]interface{})
 	if len(panels) != 2 {
 		t.Fatalf("expected 2 panels, got %d", len(panels))
 	}
 
 	// First panel takes full width (24 units because span 12 * 2)
-	p0 := panels[0].(map[string]interface{})
-	gp0 := p0["gridPos"].(map[string]interface{})
+	p0, _ := panels[0].(map[string]interface{})
+	gp0, _ := p0["gridPos"].(map[string]interface{})
 	if gp0["w"] != 24 {
 		t.Errorf("expected panel 0 w=24, got %v", gp0["w"])
 	}
 
 	// Second panel wraps to next line
-	p1 := panels[1].(map[string]interface{})
-	gp1 := p1["gridPos"].(map[string]interface{})
+	p1, _ := panels[1].(map[string]interface{})
+	gp1, _ := p1["gridPos"].(map[string]interface{})
 	if gp1["x"] != 0 {
 		t.Errorf("expected panel 1 x=0 (wrapped), got %v", gp1["x"])
 	}
-	if gp1["y"].(int) <= 0 {
+	if y, _ := gp1["y"].(int); y <= 0 {
 		t.Errorf("expected panel 1 y > 0 (wrapped), got %v", gp1["y"])
 	}
 }
@@ -186,8 +186,8 @@ func TestConvertToGrafana5Layout_CollapsedRow(t *testing.T) {
 
 	ConvertToGrafana5Layout(results)
 
-	dashboard := results["dashboard"].(map[string]interface{})
-	panels := dashboard["panels"].([]interface{})
+	dashboard, _ := results["dashboard"].(map[string]interface{})
+	panels, _ := dashboard["panels"].([]interface{})
 
 	// Should have: 1 collapsible row (with nested panels) + 1 regular row panel
 	if len(panels) < 2 {
@@ -195,7 +195,7 @@ func TestConvertToGrafana5Layout_CollapsedRow(t *testing.T) {
 	}
 
 	// First panel should be the collapsed row with nested panels
-	p0 := panels[0].(map[string]interface{})
+	p0, _ := panels[0].(map[string]interface{})
 	if p0["type"] != "row" {
 		t.Errorf("expected first panel to be row type, got %v", p0["type"])
 	}

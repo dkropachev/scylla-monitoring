@@ -10,19 +10,19 @@ import (
 
 // ConfigOptions holds all options for generating a prometheus.yml file.
 type ConfigOptions struct {
-	AlertManagerAddress  string
-	GrafanaAddress       string
-	ManagerAddress       string // For consul-based SD
-	UseConsul            bool
-	DropMetrics          []string // Category names or regex patterns
-	ScrapeInterval       string   // e.g. "30s"
-	EvaluationInterval   string   // e.g. "30s"
-	NativeHistogram      bool
-	NoNodeExporterFile   bool
-	NoManagerAgentFile   bool
-	VectorSearch         bool
-	AdditionalTargets    []string // Paths to additional target files
-	OutputPath           string
+	AlertManagerAddress string
+	GrafanaAddress      string
+	ManagerAddress      string // For consul-based SD
+	UseConsul           bool
+	DropMetrics         []string // Category names or regex patterns
+	ScrapeInterval      string   // e.g. "30s"
+	EvaluationInterval  string   // e.g. "30s"
+	NativeHistogram     bool
+	NoNodeExporterFile  bool
+	NoManagerAgentFile  bool
+	VectorSearch        bool
+	AdditionalTargets   []string // Paths to additional target files
+	OutputPath          string
 }
 
 // GenerateConfig generates a prometheus.yml from a template with the given options.
@@ -90,7 +90,7 @@ func GenerateConfig(template []byte, opts ConfigOptions) ([]byte, error) {
 
 	// Append additional target files
 	for _, tf := range opts.AdditionalTargets {
-		data, err := os.ReadFile(tf)
+		data, err := os.ReadFile(tf) //nolint:gosec // user-provided target file path
 		if err != nil {
 			return nil, fmt.Errorf("reading additional target file %s: %w", tf, err)
 		}
@@ -108,11 +108,11 @@ func WriteConfig(template []byte, opts ConfigOptions) error {
 	}
 
 	dir := filepath.Dir(opts.OutputPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0750); err != nil { //nolint:gosec // config output dir
 		return fmt.Errorf("creating output directory: %w", err)
 	}
 
-	if err := os.WriteFile(opts.OutputPath, data, 0644); err != nil {
+	if err := os.WriteFile(opts.OutputPath, data, 0600); err != nil { //nolint:gosec // config file
 		return fmt.Errorf("writing config: %w", err)
 	}
 

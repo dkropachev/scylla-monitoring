@@ -11,11 +11,11 @@ import (
 
 // ComponentStatus holds the status of a single stack component.
 type ComponentStatus struct {
-	Name      string
-	Status    string // "running", "stopped", "not found"
-	Image     string
-	Address   string
-	Uptime    time.Duration
+	Name    string
+	Status  string // "running", "stopped", "not found"
+	Image   string
+	Address string
+	Uptime  time.Duration
 }
 
 // StackStatus holds the status of the entire monitoring stack.

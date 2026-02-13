@@ -66,7 +66,7 @@ func TestWriteDatasourceFiles_Basic(t *testing.T) {
 	outDir := filepath.Join(dir, "provisioning/datasources")
 
 	// Check main datasource
-	data, err := os.ReadFile(filepath.Join(outDir, "datasource.yaml"))
+	data, err := os.ReadFile(filepath.Join(outDir, "datasource.yaml")) //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading datasource.yaml: %v", err)
 	}
@@ -84,7 +84,7 @@ func TestWriteDatasourceFiles_Basic(t *testing.T) {
 	}
 
 	// ScyllaDB datasource should exist (no credentials)
-	data, err = os.ReadFile(filepath.Join(outDir, "datasource.scylla.yml"))
+	data, err = os.ReadFile(filepath.Join(outDir, "datasource.scylla.yml")) //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading datasource.scylla.yml: %v", err)
 	}
@@ -106,7 +106,7 @@ func TestWriteDatasourceFiles_WithLoki(t *testing.T) {
 	}
 
 	outDir := filepath.Join(dir, "provisioning/datasources")
-	data, err := os.ReadFile(filepath.Join(outDir, "datasource.loki.yaml"))
+	data, err := os.ReadFile(filepath.Join(outDir, "datasource.loki.yaml")) //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading datasource.loki.yaml: %v", err)
 	}
@@ -129,7 +129,7 @@ func TestWriteDatasourceFiles_WithScyllaCredentials(t *testing.T) {
 	}
 
 	outDir := filepath.Join(dir, "provisioning/datasources")
-	data, err := os.ReadFile(filepath.Join(outDir, "datasource.scylla.yml"))
+	data, err := os.ReadFile(filepath.Join(outDir, "datasource.scylla.yml")) //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading datasource.scylla.yml: %v", err)
 	}
@@ -155,7 +155,7 @@ func TestWriteDatasourceFiles_CustomScrapeInterval(t *testing.T) {
 	}
 
 	outDir := filepath.Join(dir, "provisioning/datasources")
-	data, err := os.ReadFile(filepath.Join(outDir, "datasource.yaml"))
+	data, err := os.ReadFile(filepath.Join(outDir, "datasource.yaml")) //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading datasource.yaml: %v", err)
 	}

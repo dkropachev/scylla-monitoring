@@ -9,39 +9,39 @@ import (
 
 // ComposeOptions holds options for generating docker-compose.yml and .env files.
 type ComposeOptions struct {
-	Template          []byte
-	OutputDir         string
-	PrometheusVersion string
+	Template            []byte
+	OutputDir           string
+	PrometheusVersion   string
 	AlertManagerVersion string
-	GrafanaVersion    string
-	LokiVersion       string
-	PrometheusPort    int
-	GrafanaPort       int
-	AlertManagerPort  int
-	LokiPort          int
-	AdminPassword     string
-	BasicAuth         bool
-	Anonymous         bool
-	AnonymousRole     string
-	ScyllaTargetFile  string
-	NodeTargetFile    string
-	PrometheusRules   string
-	PrometheusCmd     []string
-	GrafanaEnv        []string
-	DockerParams      string
-	RestartPolicy     string
-	HostNetwork       bool
-	PrometheusDataDir string
-	GrafanaDataDir    string
+	GrafanaVersion      string
+	LokiVersion         string
+	PrometheusPort      int
+	GrafanaPort         int
+	AlertManagerPort    int
+	LokiPort            int
+	AdminPassword       string
+	BasicAuth           bool
+	Anonymous           bool
+	AnonymousRole       string
+	ScyllaTargetFile    string
+	NodeTargetFile      string
+	PrometheusRules     string
+	PrometheusCmd       []string
+	GrafanaEnv          []string
+	DockerParams        string
+	RestartPolicy       string
+	HostNetwork         bool
+	PrometheusDataDir   string
+	GrafanaDataDir      string
 	AlertManagerDataDir string
-	LokiDataDir       string
-	RunLoki           bool
-	VictoriaMetrics   bool
+	LokiDataDir         string
+	RunLoki             bool
+	VictoriaMetrics     bool
 }
 
 // GenerateCompose generates docker-compose.yml and .env files from a template.
 func GenerateCompose(opts ComposeOptions) error {
-	if err := os.MkdirAll(opts.OutputDir, 0755); err != nil {
+	if err := os.MkdirAll(opts.OutputDir, 0750); err != nil { //nolint:gosec // compose output dir
 		return fmt.Errorf("creating output directory: %w", err)
 	}
 
@@ -85,14 +85,14 @@ func GenerateCompose(opts ComposeOptions) error {
 
 	// Write compose file
 	composePath := filepath.Join(opts.OutputDir, "docker-compose.yml")
-	if err := os.WriteFile(composePath, []byte(compose), 0644); err != nil {
+	if err := os.WriteFile(composePath, []byte(compose), 0600); err != nil { //nolint:gosec // compose file
 		return fmt.Errorf("writing docker-compose.yml: %w", err)
 	}
 
 	// Write .env file
 	env := generateEnvFile(opts)
 	envPath := filepath.Join(opts.OutputDir, ".env")
-	if err := os.WriteFile(envPath, []byte(env), 0644); err != nil {
+	if err := os.WriteFile(envPath, []byte(env), 0600); err != nil { //nolint:gosec // env file
 		return fmt.Errorf("writing .env: %w", err)
 	}
 

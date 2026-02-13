@@ -16,18 +16,18 @@ import (
 
 // ArchiveOptions holds options for exporting a monitoring stack.
 type ArchiveOptions struct {
-	PrometheusURL    string
-	GrafanaURL       string
-	GrafanaUser      string
-	GrafanaPassword  string
-	OutputPath       string // path to the output tar.gz
+	PrometheusURL   string
+	GrafanaURL      string
+	GrafanaUser     string
+	GrafanaPassword string
+	OutputPath      string // path to the output tar.gz
 
 	// Local config file paths (for collecting configs)
-	PrometheusConfig string
-	AlertRulesDir    string
+	PrometheusConfig   string
+	AlertRulesDir      string
 	AlertManagerConfig string
-	LokiConfig       string
-	TargetFiles      []string
+	LokiConfig         string
+	TargetFiles        []string
 }
 
 // Metadata holds export metadata written to the archive.
@@ -47,7 +47,7 @@ func ArchiveStack(opts ArchiveOptions) error {
 	if err != nil {
 		return fmt.Errorf("creating staging directory: %w", err)
 	}
-	defer os.RemoveAll(stageDir)
+	defer func() { _ = os.RemoveAll(stageDir) }()
 
 	meta := Metadata{
 		ExportTimestamp: time.Now().UTC().Format(time.RFC3339),
@@ -62,7 +62,7 @@ func ArchiveStack(opts ArchiveOptions) error {
 
 		// Dashboards
 		dashDir := filepath.Join(stageDir, "dashboards")
-		if err := os.MkdirAll(dashDir, 0755); err != nil {
+		if err := os.MkdirAll(dashDir, 0750); err != nil { //nolint:gosec // staging dir
 			return err
 		}
 
@@ -86,7 +86,7 @@ func ArchiveStack(opts ArchiveOptions) error {
 				data, _ = json.MarshalIndent(parsed, "", "  ")
 			}
 			fname := fmt.Sprintf("%s.json", r.UID)
-			if err := os.WriteFile(filepath.Join(dashDir, fname), data, 0644); err != nil {
+			if err := os.WriteFile(filepath.Join(dashDir, fname), data, 0600); err != nil { //nolint:gosec // staging file
 				return fmt.Errorf("writing dashboard %s: %w", r.UID, err)
 			}
 			meta.DashboardCount++
@@ -94,7 +94,7 @@ func ArchiveStack(opts ArchiveOptions) error {
 
 		// Datasources
 		dsDir := filepath.Join(stageDir, "datasources")
-		if err := os.MkdirAll(dsDir, 0755); err != nil {
+		if err := os.MkdirAll(dsDir, 0750); err != nil { //nolint:gosec // staging dir
 			return err
 		}
 
@@ -108,7 +108,7 @@ func ArchiveStack(opts ArchiveOptions) error {
 				continue
 			}
 			fname := fmt.Sprintf("%s.json", ds.Name)
-			if err := os.WriteFile(filepath.Join(dsDir, fname), data, 0644); err != nil {
+			if err := os.WriteFile(filepath.Join(dsDir, fname), data, 0600); err != nil { //nolint:gosec // staging file
 				return fmt.Errorf("writing datasource %s: %w", ds.Name, err)
 			}
 			meta.DatasourceCount++
@@ -116,43 +116,43 @@ func ArchiveStack(opts ArchiveOptions) error {
 
 		// Folders
 		folderDir := filepath.Join(stageDir, "folders")
-		if err := os.MkdirAll(folderDir, 0755); err != nil {
+		if err := os.MkdirAll(folderDir, 0750); err != nil { //nolint:gosec // staging dir
 			return err
 		}
 		folders, err := gc.ListFolders()
 		if err == nil {
 			data, _ := json.MarshalIndent(folders, "", "  ")
-			os.WriteFile(filepath.Join(folderDir, "folders.json"), data, 0644)
+			_ = os.WriteFile(filepath.Join(folderDir, "folders.json"), data, 0600)
 		}
 	}
 
 	// Collect config files
 	configDir := filepath.Join(stageDir, "prometheus")
-	os.MkdirAll(configDir, 0755)
+	_ = os.MkdirAll(configDir, 0750)
 
 	if opts.PrometheusConfig != "" {
-		copyFile(opts.PrometheusConfig, filepath.Join(configDir, "prometheus.yml"))
+		_ = copyFile(opts.PrometheusConfig, filepath.Join(configDir, "prometheus.yml"))
 	}
 	if opts.AlertRulesDir != "" {
-		copyDir(opts.AlertRulesDir, filepath.Join(configDir, "prom_rules"))
+		_ = copyDir(opts.AlertRulesDir, filepath.Join(configDir, "prom_rules"))
 	}
 	if opts.AlertManagerConfig != "" {
 		amDir := filepath.Join(stageDir, "alertmanager")
-		os.MkdirAll(amDir, 0755)
-		copyFile(opts.AlertManagerConfig, filepath.Join(amDir, "config.yml"))
+		_ = os.MkdirAll(amDir, 0750)
+		_ = copyFile(opts.AlertManagerConfig, filepath.Join(amDir, "config.yml"))
 	}
 	if opts.LokiConfig != "" {
 		lokiDir := filepath.Join(stageDir, "loki")
-		os.MkdirAll(lokiDir, 0755)
-		copyFile(opts.LokiConfig, filepath.Join(lokiDir, "config.yaml"))
+		_ = os.MkdirAll(lokiDir, 0750)
+		_ = copyFile(opts.LokiConfig, filepath.Join(lokiDir, "config.yaml"))
 	}
 
 	// Target files
 	if len(opts.TargetFiles) > 0 {
 		targetDir := filepath.Join(stageDir, "targets")
-		os.MkdirAll(targetDir, 0755)
+		_ = os.MkdirAll(targetDir, 0750)
 		for _, tf := range opts.TargetFiles {
-			copyFile(tf, filepath.Join(targetDir, filepath.Base(tf)))
+			_ = copyFile(tf, filepath.Join(targetDir, filepath.Base(tf)))
 		}
 	}
 
@@ -175,7 +175,7 @@ func ArchiveStack(opts ArchiveOptions) error {
 	if err != nil {
 		return fmt.Errorf("marshaling metadata: %w", err)
 	}
-	if err := os.WriteFile(filepath.Join(stageDir, "metadata.yaml"), metaData, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(stageDir, "metadata.yaml"), metaData, 0600); err != nil {
 		return fmt.Errorf("writing metadata: %w", err)
 	}
 
@@ -188,11 +188,11 @@ func ArchiveStack(opts ArchiveOptions) error {
 }
 
 func copyFile(src, dst string) error {
-	data, err := os.ReadFile(src)
+	data, err := os.ReadFile(src) //nolint:gosec // internal helper with known paths
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(dst, data, 0644)
+	return os.WriteFile(dst, data, 0600) //nolint:gosec // internal helper
 }
 
 func copyDir(src, dst string) error {
@@ -203,7 +203,7 @@ func copyDir(src, dst string) error {
 		relPath, _ := filepath.Rel(src, path)
 		target := filepath.Join(dst, relPath)
 		if info.IsDir() {
-			return os.MkdirAll(target, 0755)
+			return os.MkdirAll(target, 0750)
 		}
 		return copyFile(path, target)
 	})

@@ -91,9 +91,9 @@ are automatically rewritten to use the new container-internal addresses.`,
 }
 
 var migrateCopyCmd = &cobra.Command{
-	Use:   "copy",
-	Short: "Live copy from one stack to another",
-	Long:  `Copy dashboards and datasources from a source Grafana to a target.`,
+	Use:          "copy",
+	Short:        "Live copy from one stack to another",
+	Long:         `Copy dashboards and datasources from a source Grafana to a target.`,
 	SilenceUsage: true,
 	RunE:         runMigrateCopy,
 }
@@ -106,7 +106,7 @@ func init() {
 	migrateCmd.AddCommand(migrateCopyCmd)
 
 	// Export flags
-	migrateExportFlags.GrafanaConnFlags.Register(migrateExportCmd, "")
+	migrateExportFlags.Register(migrateExportCmd, "")
 	ef := migrateExportCmd.Flags()
 	ef.StringVar(&migrateExportFlags.PrometheusURL, "prometheus-url", "", "Prometheus URL (enables metric data export)")
 	ef.StringVar(&migrateExportFlags.Output, "output", "stack-export.tar.gz", "Output archive path")
@@ -117,7 +117,7 @@ func init() {
 	ef.StringSliceVar(&migrateExportFlags.TargetFiles, "target-files", nil, "Target files to include")
 
 	// Import flags
-	migrateImportFlags.GrafanaConnFlags.Register(migrateImportCmd, "")
+	migrateImportFlags.Register(migrateImportCmd, "")
 	imf := migrateImportCmd.Flags()
 	imf.StringVar(&migrateImportFlags.PrometheusURL, "prometheus-url", "", "Rewrite Prometheus datasource URLs to this address")
 	imf.StringVar(&migrateImportFlags.DataDir, "data-dir", "", "Prometheus data directory")
@@ -125,7 +125,7 @@ func init() {
 	imf.IntVar(&migrateImportFlags.GrafanaPort, "grafana-port", 3000, "Grafana port")
 
 	// Clone flags
-	migrateCloneFlags.GrafanaConnFlags.Register(migrateCloneCmd, "http://localhost:3000")
+	migrateCloneFlags.Register(migrateCloneCmd, "http://localhost:3000")
 	clf := migrateCloneCmd.Flags()
 	clf.StringVar(&migrateCloneFlags.PrometheusURL, "prometheus-url", "http://localhost:9090", "Source Prometheus URL")
 	clf.IntVar(&migrateCloneFlags.PrometheusPort, "prometheus-port", 9091, "Target Prometheus port")
@@ -139,8 +139,8 @@ func init() {
 	cf := migrateCopyCmd.Flags()
 	cf.BoolVar(&migrateCopyFlags.IncludeDashboards, "include-dashboards", true, "Copy dashboards")
 	cf.BoolVar(&migrateCopyFlags.IncludeDatasources, "include-datasources", true, "Copy datasources")
-	migrateCopyCmd.MarkFlagRequired("source-grafana-url")
-	migrateCopyCmd.MarkFlagRequired("target-grafana-url")
+	_ = migrateCopyCmd.MarkFlagRequired("source-grafana-url")
+	_ = migrateCopyCmd.MarkFlagRequired("target-grafana-url")
 }
 
 func runMigrateExport(cmd *cobra.Command, args []string) error {

@@ -17,7 +17,7 @@ var versionsYAML []byte
 
 func init() {
 	// Try to load embedded versions data
-	data, err := os.ReadFile("assets/versions.yaml")
+	data, err := os.ReadFile("assets/versions.yaml") //nolint:gosec // known path
 	if err == nil {
 		versionsYAML = data
 	}
@@ -39,7 +39,7 @@ var versionCmd = &cobra.Command{
 
 		if len(versionsYAML) == 0 {
 			// Try loading from file system
-			data, err := os.ReadFile("assets/versions.yaml")
+			data, err := os.ReadFile("assets/versions.yaml") //nolint:gosec // known path
 			if err != nil {
 				return fmt.Errorf("versions data not available: %w", err)
 			}

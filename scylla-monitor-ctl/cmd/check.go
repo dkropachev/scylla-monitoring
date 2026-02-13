@@ -14,11 +14,11 @@ import (
 )
 
 var checkFlags struct {
-	GrafanaURL       string
-	GrafanaUser      string
-	GrafanaPassword  string
-	PrometheusURL    string
-	AlertManagerURL  string
+	GrafanaURL      string
+	GrafanaUser     string
+	GrafanaPassword string
+	PrometheusURL   string
+	AlertManagerURL string
 }
 
 var checkCmd = &cobra.Command{
@@ -190,7 +190,7 @@ func checkAlertManager() []checkResult {
 			Detail:    err.Error(),
 		}}
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return []checkResult{{
 			Component: "AlertManager",
@@ -259,7 +259,7 @@ func checkPrometheusDatasourceProxy(gc *grafana.Client, ds grafana.APIDatasource
 	if err != nil {
 		return fmt.Errorf("proxy query failed: %w", err)
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("proxy query returned status %d", resp.StatusCode)
 	}

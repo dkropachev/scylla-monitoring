@@ -79,7 +79,7 @@ func CloneStack(ctx context.Context, opts CloneOptions) error {
 	if err != nil {
 		return fmt.Errorf("creating staging directory: %w", err)
 	}
-	defer os.RemoveAll(stageDir)
+	defer func() { _ = os.RemoveAll(stageDir) }()
 
 	// Write each target file to staging, preserving the container-internal path structure
 	targetMounts, err := writeTargetFiles(stageDir, targetGroups)
@@ -89,7 +89,7 @@ func CloneStack(ctx context.Context, opts CloneOptions) error {
 
 	// 4. Copy prometheus.yml and fix internal references
 	promConfigSrc := "prometheus/build/prometheus.yml"
-	promConfigData, err := os.ReadFile(promConfigSrc)
+	promConfigData, err := os.ReadFile(promConfigSrc) //nolint:gosec // known local path
 	if err != nil {
 		return fmt.Errorf("reading prometheus.yml: %w", err)
 	}
@@ -108,7 +108,7 @@ func CloneStack(ctx context.Context, opts CloneOptions) error {
 	promConfig = replaceAlertmanagerTarget(promConfig, amName+":9093")
 
 	clonedConfigPath := filepath.Join(stageDir, "prometheus.yml")
-	if err := os.WriteFile(clonedConfigPath, []byte(promConfig), 0644); err != nil {
+	if err := os.WriteFile(clonedConfigPath, []byte(promConfig), 0600); err != nil { //nolint:gosec // staging file
 		return fmt.Errorf("writing cloned prometheus.yml: %w", err)
 	}
 
@@ -194,11 +194,11 @@ func CloneStack(ctx context.Context, opts CloneOptions) error {
 	slog.Info("waiting for services to start")
 	promURL := fmt.Sprintf("http://localhost:%d/-/ready", opts.PrometheusPort)
 	if err := docker.WaitForHealth(ctx, promURL, 35, time.Second); err != nil {
-		return fmt.Errorf("Prometheus health check: %w", err)
+		return fmt.Errorf("prometheus health check: %w", err)
 	}
 	grafURL := fmt.Sprintf("http://localhost:%d/api/health", opts.GrafanaPort)
 	if err := docker.WaitForHealth(ctx, grafURL, 35, time.Second); err != nil {
-		return fmt.Errorf("Grafana health check: %w", err)
+		return fmt.Errorf("grafana health check: %w", err)
 	}
 
 	// 7. Import datasources with rewritten Prometheus URL
@@ -291,7 +291,7 @@ func writeTargetFiles(stageDir string, targetGroups map[string][]prometheus.Targ
 	for containerDir, files := range dirFiles {
 		// Create a local directory for this container directory
 		localDir := filepath.Join(stageDir, "targets", strings.ReplaceAll(containerDir, "/", "_"))
-		if err := os.MkdirAll(localDir, 0755); err != nil {
+		if err := os.MkdirAll(localDir, 0750); err != nil { //nolint:gosec // staging dir
 			return nil, fmt.Errorf("creating target dir: %w", err)
 		}
 
@@ -301,7 +301,7 @@ func writeTargetFiles(stageDir string, targetGroups map[string][]prometheus.Targ
 				return nil, fmt.Errorf("marshaling targets: %w", err)
 			}
 			localPath := filepath.Join(localDir, filename)
-			if err := os.WriteFile(localPath, data, 0644); err != nil {
+			if err := os.WriteFile(localPath, data, 0600); err != nil { //nolint:gosec // staging file
 				return nil, fmt.Errorf("writing target file: %w", err)
 			}
 			slog.Info("wrote target file", "file", filename, "targets", len(groups))
@@ -312,8 +312,6 @@ func writeTargetFiles(stageDir string, targetGroups map[string][]prometheus.Targ
 
 	return mounts, nil
 }
-
-var staticTargetRe = regexp.MustCompile(`(- targets:\s*\n\s+- )(\S+)`)
 
 // replaceStaticTarget replaces the target address in a named static_configs job.
 func replaceStaticTarget(config, jobName, newTarget string) string {

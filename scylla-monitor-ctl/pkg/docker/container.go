@@ -220,7 +220,7 @@ func WaitForHealth(ctx context.Context, url string, maxRetries int, interval tim
 
 		resp, err := httpClient.Get(url)
 		if err == nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			if resp.StatusCode >= 200 && resp.StatusCode < 400 {
 				return nil
 			}

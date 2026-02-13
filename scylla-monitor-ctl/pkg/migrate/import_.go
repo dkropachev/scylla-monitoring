@@ -45,7 +45,7 @@ func RestoreStack(opts RestoreOptions) error {
 		if err != nil {
 			return fmt.Errorf("creating extract directory: %w", err)
 		}
-		cleanup = func() { os.RemoveAll(tmpDir) }
+		cleanup = func() { _ = os.RemoveAll(tmpDir) }
 
 		if err := UnpackArchive(opts.ArchivePath, tmpDir); err != nil {
 			cleanup()
@@ -57,7 +57,7 @@ func RestoreStack(opts RestoreOptions) error {
 
 	// Read metadata
 	metaPath := filepath.Join(extractDir, "metadata.yaml")
-	metaData, err := os.ReadFile(metaPath)
+	metaData, err := os.ReadFile(metaPath) //nolint:gosec // constructed from extract dir
 	if err != nil {
 		return fmt.Errorf("reading metadata: %w", err)
 	}
@@ -72,27 +72,27 @@ func RestoreStack(opts RestoreOptions) error {
 	// Copy config files to local paths
 	promConfigSrc := filepath.Join(extractDir, "prometheus", "prometheus.yml")
 	if _, err := os.Stat(promConfigSrc); err == nil {
-		os.MkdirAll("prometheus/build", 0755)
-		copyFile(promConfigSrc, "prometheus/build/prometheus.yml")
+		_ = os.MkdirAll("prometheus/build", 0750)
+		_ = copyFile(promConfigSrc, "prometheus/build/prometheus.yml")
 	}
 
 	rulesDir := filepath.Join(extractDir, "prometheus", "prom_rules")
 	if _, err := os.Stat(rulesDir); err == nil {
-		copyDir(rulesDir, "prometheus/prom_rules")
+		_ = copyDir(rulesDir, "prometheus/prom_rules")
 	}
 
 	amConfigSrc := filepath.Join(extractDir, "alertmanager", "config.yml")
 	if _, err := os.Stat(amConfigSrc); err == nil {
-		copyFile(amConfigSrc, "prometheus/rule_config.yml")
+		_ = copyFile(amConfigSrc, "prometheus/rule_config.yml")
 	}
 
 	// Copy target files
 	targetsDir := filepath.Join(extractDir, "targets")
 	if _, err := os.Stat(targetsDir); err == nil {
 		entries, _ := os.ReadDir(targetsDir)
-		os.MkdirAll("prometheus", 0755)
+		_ = os.MkdirAll("prometheus", 0750)
 		for _, e := range entries {
-			copyFile(filepath.Join(targetsDir, e.Name()), filepath.Join("prometheus", e.Name()))
+			_ = copyFile(filepath.Join(targetsDir, e.Name()), filepath.Join("prometheus", e.Name()))
 		}
 	}
 
@@ -102,14 +102,14 @@ func RestoreStack(opts RestoreOptions) error {
 
 		// Wait for Grafana to be ready
 		if err := gc.Health(); err != nil {
-			return fmt.Errorf("Grafana not ready: %w", err)
+			return fmt.Errorf("grafana not ready: %w", err)
 		}
 
 		// Import datasources
 		dsDir := filepath.Join(extractDir, "datasources")
 		if entries, err := os.ReadDir(dsDir); err == nil {
 			for _, e := range entries {
-				data, err := os.ReadFile(filepath.Join(dsDir, e.Name()))
+				data, err := os.ReadFile(filepath.Join(dsDir, e.Name())) //nolint:gosec // reading extracted archive files
 				if err != nil {
 					continue
 				}
@@ -132,7 +132,7 @@ func RestoreStack(opts RestoreOptions) error {
 		dashDir := filepath.Join(extractDir, "dashboards")
 		if entries, err := os.ReadDir(dashDir); err == nil {
 			for _, e := range entries {
-				data, err := os.ReadFile(filepath.Join(dashDir, e.Name()))
+				data, err := os.ReadFile(filepath.Join(dashDir, e.Name())) //nolint:gosec // reading extracted archive files
 				if err != nil {
 					continue
 				}

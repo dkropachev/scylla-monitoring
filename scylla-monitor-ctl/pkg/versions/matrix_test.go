@@ -7,7 +7,7 @@ import (
 
 func loadTestMatrix(t *testing.T) *Matrix {
 	t.Helper()
-	data, err := os.ReadFile("../../assets/versions.yaml")
+	data, err := os.ReadFile("../../assets/versions.yaml") //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading versions.yaml: %v", err)
 	}

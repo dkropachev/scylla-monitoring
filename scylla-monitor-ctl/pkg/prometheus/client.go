@@ -28,7 +28,7 @@ func (c *Client) Health() error {
 	if err != nil {
 		return fmt.Errorf("prometheus health check: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("prometheus not ready: status %d", resp.StatusCode)
 	}
@@ -42,7 +42,7 @@ func (c *Client) Reload() error {
 	if err != nil {
 		return fmt.Errorf("prometheus reload: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != 200 {
 		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("prometheus reload failed (status %d): %s", resp.StatusCode, body)
@@ -73,7 +73,7 @@ func (c *Client) QueryAlerts() ([]Alert, error) {
 	if err != nil {
 		return nil, fmt.Errorf("querying alerts: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -98,7 +98,7 @@ func (c *Client) QueryInstant(query string) (json.RawMessage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("instant query: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -136,7 +136,7 @@ func (c *Client) QueryTargetGroups() (map[string][]TargetGroup, error) {
 	if err != nil {
 		return nil, fmt.Errorf("querying targets: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -205,7 +205,7 @@ func (c *Client) CreateSnapshot() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("creating snapshot: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

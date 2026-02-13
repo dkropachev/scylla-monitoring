@@ -103,7 +103,7 @@ func generateWithPython(t *testing.T, dashboard, version string, useMetricsRepla
 		}
 	}
 
-	data, err := os.ReadFile(matches[0])
+	data, err := os.ReadFile(matches[0]) //nolint:gosec // test code
 	if err != nil {
 		return nil, fmt.Errorf("reading python output: %v", err)
 	}
@@ -123,12 +123,12 @@ func generateWithGo(t *testing.T, dashboard, version string, useMetricsReplace b
 	typesPath := filepath.Join(root, "grafana/types.json")
 	templatePath := filepath.Join(root, fmt.Sprintf("grafana/%s.template.json", dashboard))
 
-	typesData, err := os.ReadFile(typesPath)
+	typesData, err := os.ReadFile(typesPath) //nolint:gosec // test code
 	if err != nil {
 		return nil, fmt.Errorf("reading types.json: %v", err)
 	}
 
-	templateData, err := os.ReadFile(templatePath)
+	templateData, err := os.ReadFile(templatePath) //nolint:gosec // test code
 	if err != nil {
 		return nil, fmt.Errorf("reading template: %v", err)
 	}
@@ -176,12 +176,12 @@ func generateWithGoRaw(t *testing.T, dashboard, version string, useMetricsReplac
 	typesPath := filepath.Join(root, "grafana/types.json")
 	templatePath := filepath.Join(root, fmt.Sprintf("grafana/%s.template.json", dashboard))
 
-	typesData, err := os.ReadFile(typesPath)
+	typesData, err := os.ReadFile(typesPath) //nolint:gosec // test code
 	if err != nil {
 		return nil, fmt.Errorf("reading types.json: %v", err)
 	}
 
-	templateData, err := os.ReadFile(templatePath)
+	templateData, err := os.ReadFile(templatePath) //nolint:gosec // test code
 	if err != nil {
 		return nil, fmt.Errorf("reading template: %v", err)
 	}
@@ -275,9 +275,9 @@ func TestPythonGoCompatibility_AllDashboards(t *testing.T) {
 					pyJSON, _ := json.MarshalIndent(pyResult, "", "    ")
 					goJSON, _ := json.MarshalIndent(goResult, "", "    ")
 					debugDir := filepath.Join("../../testdata/debug", version)
-					os.MkdirAll(debugDir, 0755)
-					os.WriteFile(filepath.Join(debugDir, dashboard+".python.json"), pyJSON, 0644)
-					os.WriteFile(filepath.Join(debugDir, dashboard+".go.json"), goJSON, 0644)
+					_ = os.MkdirAll(debugDir, 0750)                                                   //nolint:gosec // test debug output
+					_ = os.WriteFile(filepath.Join(debugDir, dashboard+".python.json"), pyJSON, 0600) //nolint:gosec // test debug output
+					_ = os.WriteFile(filepath.Join(debugDir, dashboard+".go.json"), goJSON, 0600)     //nolint:gosec // test debug output
 					t.Logf("Debug files written to testdata/debug/%s/", version)
 				}
 			})
@@ -501,7 +501,7 @@ func TestPythonGoCompatibility_ByteForByte(t *testing.T) {
 	if len(matches) == 0 {
 		t.Fatal("No Python output file")
 	}
-	pyBytes, _ := os.ReadFile(matches[0])
+	pyBytes, _ := os.ReadFile(matches[0]) //nolint:gosec // test code
 
 	// Generate with Go — get raw bytes directly from the generator
 	goBytes, err := generateWithGoRaw(t, dashboard, version, useMetrics)
@@ -541,9 +541,9 @@ func TestPythonGoCompatibility_ByteForByte(t *testing.T) {
 
 		// Save for manual diff
 		debugDir := "../../testdata/debug/byte_compare"
-		os.MkdirAll(debugDir, 0755)
-		os.WriteFile(filepath.Join(debugDir, "python.json"), pyBytes, 0644)
-		os.WriteFile(filepath.Join(debugDir, "go.json"), goBytes, 0644)
+		_ = os.MkdirAll(debugDir, 0750)                                         //nolint:gosec // test debug output
+		_ = os.WriteFile(filepath.Join(debugDir, "python.json"), pyBytes, 0600) //nolint:gosec // test debug output
+		_ = os.WriteFile(filepath.Join(debugDir, "go.json"), goBytes, 0600)     //nolint:gosec // test debug output
 		t.Logf("Files saved to testdata/debug/byte_compare/ for manual diff")
 	} else {
 		t.Logf("Byte-for-byte match! (%d lines)", len(pyLines))

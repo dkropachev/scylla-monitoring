@@ -11,10 +11,10 @@ type Config struct {
 	Enterprise     bool   `mapstructure:"enterprise"`
 
 	Storage struct {
-		PrometheusData    string `mapstructure:"prometheus_data"`
-		GrafanaData       string `mapstructure:"grafana_data"`
-		LokiData          string `mapstructure:"loki_data"`
-		AlertManagerData  string `mapstructure:"alertmanager_data"`
+		PrometheusData   string `mapstructure:"prometheus_data"`
+		GrafanaData      string `mapstructure:"grafana_data"`
+		LokiData         string `mapstructure:"loki_data"`
+		AlertManagerData string `mapstructure:"alertmanager_data"`
 	} `mapstructure:"storage"`
 
 	Ports struct {

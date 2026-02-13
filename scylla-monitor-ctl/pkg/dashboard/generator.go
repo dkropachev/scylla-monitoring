@@ -12,13 +12,13 @@ import (
 
 // Generator orchestrates dashboard generation from templates and types.
 type Generator struct {
-	Types         map[string]interface{}
-	Version       []int
-	VersionName   string
-	Products      []string
-	ExactMatch    map[string]interface{}
-	Replacements  [][2]string
-	Grafana4      bool
+	Types        map[string]interface{}
+	Version      []int
+	VersionName  string
+	Products     []string
+	ExactMatch   map[string]interface{}
+	Replacements [][2]string
+	Grafana4     bool
 }
 
 // NewGenerator creates a new dashboard generator.
@@ -116,11 +116,11 @@ func (g *Generator) GenerateToFile(templateData []byte, outputPath string) error
 	}
 
 	dir := filepath.Dir(outputPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0750); err != nil { //nolint:gosec // dashboard output dir
 		return fmt.Errorf("creating output directory: %w", err)
 	}
 
-	if err := os.WriteFile(outputPath, output, 0644); err != nil {
+	if err := os.WriteFile(outputPath, output, 0600); err != nil { //nolint:gosec // dashboard output file
 		return fmt.Errorf("writing dashboard: %w", err)
 	}
 
@@ -131,7 +131,7 @@ func (g *Generator) GenerateToFile(templateData []byte, outputPath string) error
 func LoadExactMatchFiles(files []string) (map[string]interface{}, error) {
 	result := map[string]interface{}{}
 	for _, f := range files {
-		data, err := os.ReadFile(f)
+		data, err := os.ReadFile(f) //nolint:gosec // paths come from CLI flags
 		if err != nil {
 			return nil, fmt.Errorf("reading replace file %s: %w", f, err)
 		}
@@ -175,7 +175,7 @@ func escapeNonASCII(data []byte) []byte {
 func MergeTypesFiles(files []string) (map[string]interface{}, error) {
 	result := map[string]interface{}{}
 	for _, f := range files {
-		data, err := os.ReadFile(f)
+		data, err := os.ReadFile(f) //nolint:gosec // paths come from CLI flags
 		if err != nil {
 			return nil, fmt.Errorf("reading types file %s: %w", f, err)
 		}

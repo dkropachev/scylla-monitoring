@@ -29,19 +29,19 @@ var upgradeCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(upgradeCmd)
-	upgradeFlags.GrafanaConnFlags.Register(upgradeCmd, "http://localhost:3000")
-	upgradeFlags.VersionFlags.Register(upgradeCmd)
+	upgradeFlags.GrafanaConnFlags.Register(upgradeCmd, "http://localhost:3000") //nolint:staticcheck // ambiguous with VersionFlags.Register
+	upgradeFlags.VersionFlags.Register(upgradeCmd)                              //nolint:staticcheck // ambiguous with GrafanaConnFlags.Register
 	f := upgradeCmd.Flags()
 	f.StringVar(&upgradeFlags.PrometheusURL, "prometheus-url", "", "Prometheus URL (for config reload)")
 	f.BoolVar(&upgradeFlags.ReloadPrometheus, "reload-prometheus", false, "Reload Prometheus config after upgrade")
-	upgradeCmd.MarkFlagRequired("scylla-version")
+	_ = upgradeCmd.MarkFlagRequired("scylla-version")
 }
 
 func runUpgrade(cmd *cobra.Command, args []string) error {
 	gc := grafana.NewClient(upgradeFlags.URL, upgradeFlags.User, upgradeFlags.Password)
 
 	// Generate dashboards
-	typesData, err := os.ReadFile("grafana/types.json")
+	typesData, err := os.ReadFile("grafana/types.json") //nolint:gosec // known path
 	if err != nil {
 		return fmt.Errorf("reading types.json: %w", err)
 	}
@@ -56,7 +56,7 @@ func runUpgrade(cmd *cobra.Command, args []string) error {
 	uploaded := 0
 	for _, name := range dashboards {
 		templatePath := filepath.Join("grafana", name+".template.json")
-		templateData, err := os.ReadFile(templatePath)
+		templateData, err := os.ReadFile(templatePath) //nolint:gosec // constructed path
 		if err != nil {
 			slog.Warn("reading template", "dashboard", name, "error", err)
 			continue

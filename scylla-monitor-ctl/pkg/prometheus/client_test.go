@@ -53,7 +53,7 @@ func TestPrometheusClient_Reload(t *testing.T) {
 func TestPrometheusClient_ReloadFail(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(403)
-		w.Write([]byte("lifecycle API not enabled"))
+		_, _ = w.Write([]byte("lifecycle API not enabled"))
 	}))
 	defer srv.Close()
 
@@ -67,7 +67,7 @@ func TestPrometheusClient_CreateSnapshot(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/v1/admin/tsdb/snapshot" && r.Method == "POST" {
 			w.WriteHeader(200)
-			w.Write([]byte(`{"status":"success","data":{"name":"20240101T000000Z-abc123"}}`))
+			_, _ = w.Write([]byte(`{"status":"success","data":{"name":"20240101T000000Z-abc123"}}`))
 			return
 		}
 		w.WriteHeader(404)

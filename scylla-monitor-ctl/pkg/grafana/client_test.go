@@ -11,7 +11,7 @@ func TestClient_Health(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/health" {
 			w.WriteHeader(200)
-			w.Write([]byte(`{"database":"ok"}`))
+			_, _ = w.Write([]byte(`{"database":"ok"}`))
 			return
 		}
 		w.WriteHeader(404)
@@ -28,7 +28,7 @@ func TestClient_GetOrg(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/org" {
 			w.WriteHeader(200)
-			w.Write([]byte(`{"id":1,"name":"Main Org."}`))
+			_, _ = w.Write([]byte(`{"id":1,"name":"Main Org."}`))
 			return
 		}
 		w.WriteHeader(404)
@@ -49,7 +49,7 @@ func TestClient_ListDatasources(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/datasources" && r.Method == "GET" {
 			w.WriteHeader(200)
-			w.Write([]byte(`[{"id":1,"name":"prometheus","type":"prometheus","url":"http://localhost:9090"}]`))
+			_, _ = w.Write([]byte(`[{"id":1,"name":"prometheus","type":"prometheus","url":"http://localhost:9090"}]`))
 			return
 		}
 		w.WriteHeader(404)
@@ -73,7 +73,7 @@ func TestClient_CreateDatasource(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/datasources" && r.Method == "POST" {
 			w.WriteHeader(200)
-			w.Write([]byte(`{"id":1,"message":"Datasource added"}`))
+			_, _ = w.Write([]byte(`{"id":1,"message":"Datasource added"}`))
 			return
 		}
 		w.WriteHeader(404)
@@ -95,12 +95,12 @@ func TestClient_UploadDashboard(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/dashboards/db" && r.Method == "POST" {
 			var payload DashboardUpload
-			json.NewDecoder(r.Body).Decode(&payload)
+			_ = json.NewDecoder(r.Body).Decode(&payload)
 			if !payload.Overwrite {
 				t.Error("expected overwrite=true")
 			}
 			w.WriteHeader(200)
-			w.Write([]byte(`{"id":1,"uid":"abc","status":"success"}`))
+			_, _ = w.Write([]byte(`{"id":1,"uid":"abc","status":"success"}`))
 			return
 		}
 		w.WriteHeader(404)
@@ -118,7 +118,7 @@ func TestClient_DownloadDashboard(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/dashboards/uid/abc123" {
 			w.WriteHeader(200)
-			w.Write([]byte(`{"dashboard":{"title":"Test"},"meta":{}}`))
+			_, _ = w.Write([]byte(`{"dashboard":{"title":"Test"},"meta":{}}`))
 			return
 		}
 		w.WriteHeader(404)
@@ -139,7 +139,7 @@ func TestClient_SearchDashboards(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/search" {
 			w.WriteHeader(200)
-			w.Write([]byte(`[{"id":1,"uid":"abc","title":"Overview","type":"dash-db"}]`))
+			_, _ = w.Write([]byte(`[{"id":1,"uid":"abc","title":"Overview","type":"dash-db"}]`))
 			return
 		}
 		w.WriteHeader(404)
@@ -164,10 +164,10 @@ func TestClient_Folders(t *testing.T) {
 		switch {
 		case r.URL.Path == "/api/folders" && r.Method == "GET":
 			w.WriteHeader(200)
-			w.Write([]byte(`[{"id":1,"uid":"abc","title":"General"}]`))
+			_, _ = w.Write([]byte(`[{"id":1,"uid":"abc","title":"General"}]`))
 		case r.URL.Path == "/api/folders" && r.Method == "POST":
 			w.WriteHeader(200)
-			w.Write([]byte(`{"id":2,"uid":"def","title":"New Folder"}`))
+			_, _ = w.Write([]byte(`{"id":2,"uid":"def","title":"New Folder"}`))
 		default:
 			w.WriteHeader(404)
 		}
@@ -200,7 +200,7 @@ func TestClient_BasicAuth(t *testing.T) {
 			return
 		}
 		w.WriteHeader(200)
-		w.Write([]byte(`{"database":"ok"}`))
+		_, _ = w.Write([]byte(`{"database":"ok"}`))
 	}))
 	defer srv.Close()
 

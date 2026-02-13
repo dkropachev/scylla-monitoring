@@ -29,7 +29,7 @@ func TestNewConfig_WithLDAP(t *testing.T) {
 	// Create a temp LDAP config file
 	tmpDir := t.TempDir()
 	ldapFile := filepath.Join(tmpDir, "ldap.toml")
-	if err := os.WriteFile(ldapFile, []byte("[[servers]]\nhost = \"ldap.example.com\"\n"), 0644); err != nil {
+	if err := os.WriteFile(ldapFile, []byte("[[servers]]\nhost = \"ldap.example.com\"\n"), 0600); err != nil { //nolint:gosec // test code
 		t.Fatal(err)
 	}
 

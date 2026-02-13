@@ -27,7 +27,7 @@ var destroyCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(destroyCmd)
-	destroyFlags.StackPortFlags.Register(destroyCmd)
+	destroyFlags.Register(destroyCmd)
 	f := destroyCmd.Flags()
 	f.BoolVar(&destroyFlags.Force, "force", false, "Force kill containers")
 	f.BoolVar(&destroyFlags.KeepData, "keep-data", false, "Keep data directories")

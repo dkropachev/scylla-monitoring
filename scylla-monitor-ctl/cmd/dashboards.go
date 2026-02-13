@@ -120,7 +120,7 @@ func runDashboardsGenerate(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		templateData, err := os.ReadFile(templatePath)
+		templateData, err := os.ReadFile(templatePath) //nolint:gosec // constructed path
 		if err != nil {
 			return fmt.Errorf("reading template %s: %w", templatePath, err)
 		}
@@ -144,7 +144,7 @@ func runDashboardsGenerate(cmd *cobra.Command, args []string) error {
 				continue
 			}
 
-			templateData, err := os.ReadFile(templatePath)
+			templateData, err := os.ReadFile(templatePath) //nolint:gosec // constructed path
 			if err != nil {
 				fmt.Printf("  Skipping %s (template not found)\n", d)
 				continue
@@ -186,7 +186,7 @@ func runDashboardsUpload(cmd *cobra.Command, args []string) error {
 	gc := grafana.NewClient(dashUploadFlags.URL, dashUploadFlags.User, dashUploadFlags.Password)
 
 	for _, path := range args {
-		data, err := os.ReadFile(path)
+		data, err := os.ReadFile(path) //nolint:gosec // user-provided path
 		if err != nil {
 			return fmt.Errorf("reading %s: %w", path, err)
 		}
@@ -203,7 +203,7 @@ func runDashboardsDownload(cmd *cobra.Command, args []string) error {
 	gc := grafana.NewClient(dashDownloadFlags.URL, dashDownloadFlags.User, dashDownloadFlags.Password)
 	outputDir := dashDownloadFlags.OutputDir
 
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, 0750); err != nil {
 		return fmt.Errorf("creating output directory: %w", err)
 	}
 
@@ -216,7 +216,7 @@ func runDashboardsDownload(cmd *cobra.Command, args []string) error {
 				continue
 			}
 			outPath := filepath.Join(outputDir, uid+".json")
-			if err := os.WriteFile(outPath, data, 0644); err != nil {
+			if err := os.WriteFile(outPath, data, 0600); err != nil {
 				return fmt.Errorf("writing %s: %w", outPath, err)
 			}
 			fmt.Printf("Downloaded %s\n", outPath)
@@ -234,7 +234,7 @@ func runDashboardsDownload(cmd *cobra.Command, args []string) error {
 				continue
 			}
 			outPath := filepath.Join(outputDir, r.UID+".json")
-			if err := os.WriteFile(outPath, data, 0644); err != nil {
+			if err := os.WriteFile(outPath, data, 0600); err != nil {
 				return fmt.Errorf("writing %s: %w", outPath, err)
 			}
 			fmt.Printf("Downloaded %s (%s)\n", r.Title, outPath)
@@ -276,7 +276,7 @@ func needsRegeneration(templatePath, outputPath string) bool {
 
 func init() {
 	// Generate flags
-	dashGenFlags.VersionFlags.Register(dashboardsGenerateCmd)
+	dashGenFlags.Register(dashboardsGenerateCmd)
 	gf := dashboardsGenerateCmd.Flags()
 	gf.StringVar(&dashGenFlags.OutputDir, "output-dir", "", "output directory (default: grafana/build)")
 	gf.BoolVar(&dashGenFlags.Force, "force", false, "force regeneration even if up to date")
@@ -288,17 +288,17 @@ func init() {
 	gf.StringSliceVar(&dashGenFlags.Products, "product", nil, "product filters")
 
 	// Upload flags
-	dashUploadFlags.GrafanaConnFlags.Register(dashboardsUploadCmd, "http://localhost:3000")
+	dashUploadFlags.Register(dashboardsUploadCmd, "http://localhost:3000")
 	uf := dashboardsUploadCmd.Flags()
 	uf.IntVar(&dashUploadFlags.FolderID, "folder-id", 0, "Grafana folder ID")
 	uf.BoolVar(&dashUploadFlags.Overwrite, "overwrite", true, "Overwrite existing dashboards")
 
 	// Download flags
-	dashDownloadFlags.GrafanaConnFlags.Register(dashboardsDownloadCmd, "http://localhost:3000")
+	dashDownloadFlags.Register(dashboardsDownloadCmd, "http://localhost:3000")
 	dashboardsDownloadCmd.Flags().StringVar(&dashDownloadFlags.OutputDir, "output-dir", ".", "Output directory for downloaded dashboards")
 
 	// List flags
-	dashListFlags.GrafanaConnFlags.Register(dashboardsListCmd, "http://localhost:3000")
+	dashListFlags.Register(dashboardsListCmd, "http://localhost:3000")
 
 	dashboardsCmd.AddCommand(dashboardsGenerateCmd)
 	dashboardsCmd.AddCommand(dashboardsUploadCmd)

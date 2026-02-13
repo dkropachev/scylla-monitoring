@@ -9,9 +9,9 @@ import (
 func TestPackUnpackArchive(t *testing.T) {
 	// Create source directory with test files
 	srcDir := t.TempDir()
-	os.MkdirAll(filepath.Join(srcDir, "subdir"), 0755)
-	os.WriteFile(filepath.Join(srcDir, "file1.txt"), []byte("hello"), 0644)
-	os.WriteFile(filepath.Join(srcDir, "subdir", "file2.txt"), []byte("world"), 0644)
+	_ = os.MkdirAll(filepath.Join(srcDir, "subdir"), 0750)
+	_ = os.WriteFile(filepath.Join(srcDir, "file1.txt"), []byte("hello"), 0600)           //nolint:gosec // test code
+	_ = os.WriteFile(filepath.Join(srcDir, "subdir", "file2.txt"), []byte("world"), 0600) //nolint:gosec // test code
 
 	// Pack
 	archivePath := filepath.Join(t.TempDir(), "test.tar.gz")
@@ -35,7 +35,7 @@ func TestPackUnpackArchive(t *testing.T) {
 	}
 
 	// Verify files
-	data, err := os.ReadFile(filepath.Join(dstDir, "file1.txt"))
+	data, err := os.ReadFile(filepath.Join(dstDir, "file1.txt")) //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading file1.txt: %v", err)
 	}
@@ -43,7 +43,7 @@ func TestPackUnpackArchive(t *testing.T) {
 		t.Errorf("expected 'hello', got %q", string(data))
 	}
 
-	data, err = os.ReadFile(filepath.Join(dstDir, "subdir", "file2.txt"))
+	data, err = os.ReadFile(filepath.Join(dstDir, "subdir", "file2.txt")) //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading subdir/file2.txt: %v", err)
 	}
@@ -55,7 +55,7 @@ func TestPackUnpackArchive(t *testing.T) {
 func TestUnpackArchive_PathTraversal(t *testing.T) {
 	// Create a valid archive first, then test that unpack to same dir works
 	srcDir := t.TempDir()
-	os.WriteFile(filepath.Join(srcDir, "safe.txt"), []byte("ok"), 0644)
+	_ = os.WriteFile(filepath.Join(srcDir, "safe.txt"), []byte("ok"), 0600) //nolint:gosec // test code
 
 	archivePath := filepath.Join(t.TempDir(), "test.tar.gz")
 	if err := PackArchive(srcDir, archivePath); err != nil {

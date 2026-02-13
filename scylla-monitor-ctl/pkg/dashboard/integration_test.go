@@ -8,12 +8,12 @@ import (
 
 // TestGeneratorWithTestdata tests the full generator pipeline using the testdata fixtures.
 func TestGeneratorWithTestdata(t *testing.T) {
-	typesData, err := os.ReadFile("../../testdata/types_small.json")
+	typesData, err := os.ReadFile("../../testdata/types_small.json") //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading types: %v", err)
 	}
 
-	templateData, err := os.ReadFile("../../testdata/template_small.json")
+	templateData, err := os.ReadFile("../../testdata/template_small.json") //nolint:gosec // test code
 	if err != nil {
 		t.Fatalf("reading template: %v", err)
 	}
@@ -75,13 +75,13 @@ func TestGeneratorWithTestdata(t *testing.T) {
 
 	// Save expected output for future comparisons
 	expectedDir := "../../testdata/expected_output"
-	os.MkdirAll(expectedDir, 0755)
-	os.WriteFile(expectedDir+"/test-dashboard.5.4.json", output, 0644)
+	_ = os.MkdirAll(expectedDir, 0750)                                     //nolint:gosec // test debug output
+	_ = os.WriteFile(expectedDir+"/test-dashboard.5.4.json", output, 0600) //nolint:gosec // test debug output
 }
 
 // TestGeneratorWithRealTypes tests the generator with the actual types.json from assets.
 func TestGeneratorWithRealTypes(t *testing.T) {
-	typesData, err := os.ReadFile("../../assets/grafana/types.json")
+	typesData, err := os.ReadFile("../../assets/grafana/types.json") //nolint:gosec // test code
 	if err != nil {
 		t.Skip("assets/grafana/types.json not available, skipping integration test")
 	}
@@ -105,7 +105,7 @@ func TestGeneratorWithRealTypes(t *testing.T) {
 	}
 
 	// Try generating from a real template if available
-	templateData, err := os.ReadFile("../../assets/grafana/scylla-overview.template.json")
+	templateData, err := os.ReadFile("../../assets/grafana/scylla-overview.template.json") //nolint:gosec // test code
 	if err != nil {
 		t.Skip("scylla-overview template not available")
 	}
